@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -74,6 +75,10 @@ function readControlPlane(
   return undefined;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function waitForControlPlane(
   cfg: VellumPathConfig,
   channelId: string,
@@ -83,7 +88,7 @@ async function waitForControlPlane(
   while (Date.now() < deadline) {
     const c = readControlPlane(cfg, channelId);
     if (c !== undefined) return { controlPort: c.controlPort };
-    await Bun.sleep(50);
+    await sleep(50);
   }
   throw new Error("timeout waiting for vellum.json control server");
 }
@@ -190,8 +195,10 @@ export class VellumClient {
       this.opts.dataDir !== undefined && this.opts.dataDir.length > 0
         ? this.opts.dataDir
         : undefined;
-    Bun.spawn({
-      cmd: daemonSpawnCmd(),
+    const cmd = daemonSpawnCmd();
+    const [bin, ...args] = cmd;
+    if (bin === undefined) throw new Error("daemon spawn command is empty");
+    spawn(bin, args, {
       env: {
         ...process.env,
         VELLUM_CHANNEL_ID: this.opts.channelId,
@@ -202,9 +209,8 @@ export class VellumClient {
         ...(dataDir !== undefined ? { VELLUM_DATA_DIR: dataDir } : {}),
         ...(this.opts.keyPath !== undefined ? { VELLUM_AGENT_KEY_PATH: this.opts.keyPath } : {}),
       },
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "inherit",
+      stdio: "inherit",
+      detached: false,
     });
 
     await waitForControlPlane(this.pathConfig, this.opts.channelId, 15_000);

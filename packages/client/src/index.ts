@@ -1,3 +1,4 @@
+export * from "@khoralabs/vellum-contracts";
 export {
   createVellumControlTransportFromEnv,
   FetchVellumControlTransport,

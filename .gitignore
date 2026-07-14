@@ -4,8 +4,10 @@ node_modules
 # output
 out
 dist
+.dts-build
 *.tgz
 apps/release
+release/
 
 # code coverage
 coverage
