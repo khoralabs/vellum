@@ -1,0 +1,5 @@
+{
+  "$schema": "./vellum-config.schema.json",
+  "relayBaseUrl": "http://localhost:8790",
+  "dataDir": "~/.vellum/data"
+}

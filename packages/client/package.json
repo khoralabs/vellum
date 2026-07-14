@@ -1,0 +1,40 @@
+{
+  "name": "@khoralabs/vellum-client",
+  "version": "0.0.0",
+  "description": "Vellum API client: daemon control POST + SQLite reads.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./vellum-config.schema.json": "./vellum-config.schema.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "build:schema": "bun run scripts/build-json-schema.ts"
+  },
+  "dependencies": {
+    "@khoralabs/relay-client": "workspace:*",
+    "@khoralabs/relay-crypto": "workspace:*",
+    "@khoralabs/relay-mls": "workspace:*",
+    "@khoralabs/did-key-identity": "^0.1.0",
+    "@khoralabs/obp-frames-impl": "workspace:*",
+    "@khoralabs/obp-model": "workspace:*",
+    "@khoralabs/obp-nbc": "workspace:*",
+    "@khoralabs/nbc-bind-policy": "workspace:*",
+    "@khoralabs/vellum-contracts": "workspace:*",
+    "@khoralabs/vellum-transport": "workspace:*",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

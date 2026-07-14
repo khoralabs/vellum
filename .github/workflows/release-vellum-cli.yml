@@ -1,0 +1,129 @@
+name: release vellum-cli
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver to publish (e.g. 0.1.0)"
+        required: true
+        type: string
+      tag:
+        description: "npm dist-tag"
+        required: true
+        type: choice
+        default: latest
+        options:
+          - latest
+          - next
+      dry_run:
+        description: "Run npm publish --dry-run; skip git tag/push"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      NPM_TAG: ${{ inputs.tag }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: init submodules
+        run: |
+          set -euo pipefail
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: verify submodules
+        run: |
+          set -euo pipefail
+          test -f vendor/obp/packages/bind-policy/package.json
+          test -f vendor/relay/packages/relay-client/package.json
+          test -f vendor/libs/packages/cli-kit/package.json
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: install
+        run: bun install --frozen-lockfile
+
+      - name: test
+        run: bun test apps/cli apps/daemon packages/client packages/contracts packages/transport scripts/stage-vellum-release.test.ts
+
+      - name: build json schema
+        run: bun run --cwd packages/client build:schema
+
+      - name: cross-compile native binaries
+        run: |
+          set -euo pipefail
+          for slug in darwin-arm64 linux-x64 linux-arm64; do
+            echo "::group::cli bun-$slug"
+            bun run apps/cli/scripts/build.ts "bun-$slug"
+            echo "::endgroup::"
+            echo "::group::daemon bun-$slug"
+            bun run apps/daemon/scripts/build.ts "bun-$slug"
+            echo "::endgroup::"
+          done
+
+      - name: stage release packages
+        run: bun run scripts/stage-vellum-release.ts "$VERSION"
+
+      - name: configure npm auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NPM_TOKEN:-}" ]; then
+            echo "::error::NPM_TOKEN repository secret is empty or unset"
+            exit 1
+          fi
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
+
+      - name: publish platform packages
+        run: |
+          set -euo pipefail
+          DRY_FLAG=""
+          if [ "$DRY_RUN" = "true" ]; then DRY_FLAG="--dry-run"; fi
+          for slug in \
+            cli-darwin-arm64 cli-linux-x64 cli-linux-arm64 \
+            daemon-darwin-arm64 daemon-linux-x64 daemon-linux-arm64; do
+            echo "::group::publish $slug"
+            (cd "apps/release/$slug" && npm publish --access public --tag "$NPM_TAG" $DRY_FLAG)
+            echo "::endgroup::"
+          done
+
+      - name: publish daemon meta
+        working-directory: apps/release/daemon
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            npm publish --access public --tag "$NPM_TAG" --dry-run
+          else
+            npm publish --access public --tag "$NPM_TAG"
+          fi
+
+      - name: publish cli meta
+        working-directory: apps/release/cli
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            npm publish --access public --tag "$NPM_TAG" --dry-run
+          else
+            npm publish --access public --tag "$NPM_TAG"
+          fi
+
+      - name: tag and push
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "vellum-cli-v${VERSION}"
+          HUSKY=0 git push origin "vellum-cli-v${VERSION}"

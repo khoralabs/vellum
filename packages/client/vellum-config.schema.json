@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "relayBaseUrl": {
+      "description": "Vellum channel-relay HTTP origin",
+      "type": "string",
+      "minLength": 1
+    },
+    "dataDir": {
+      "description": "Vellum channel data root (SQLite + vellum.json under …/vellum/channels/…)",
+      "type": "string",
+      "minLength": 1
+    },
+    "agentKeyPath": {
+      "description": "Path to Ed25519 identity JSON (see did-key-identity)",
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultChannelWebSocketUrl": {
+      "description": "Default channel WebSocket URL when env not set",
+      "type": "string",
+      "minLength": 1
+    },
+    "daemonJson": {
+      "description": "JSON log lines from vellum-daemon",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

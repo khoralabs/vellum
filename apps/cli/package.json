@@ -1,0 +1,29 @@
+{
+  "name": "@khoralabs/vellum-cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "vellum": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "bun run ./src/cli.ts"
+  },
+  "dependencies": {
+    "@khoralabs/did-key-identity": "^0.1.0",
+    "@khoralabs/cli-kit": "workspace:*",
+    "@khoralabs/obp-nbc": "workspace:*",
+    "@khoralabs/relay-client": "workspace:*",
+    "@khoralabs/relay-contracts": "workspace:*",
+    "@khoralabs/vellum-client": "workspace:*",
+    "@khoralabs/vellum-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
