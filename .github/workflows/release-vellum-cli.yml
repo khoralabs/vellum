@@ -59,7 +59,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: test
-        run: bun test apps/cli apps/daemon packages/client packages/contracts packages/transport scripts/stage-vellum-release.test.ts
+        run: bun test apps/cli apps/daemon packages/client packages/contracts packages/transport scripts/stage-vellum-release.test.ts scripts/homebrew-vellum.test.ts
 
       - name: build json schema
         run: bun run --cwd packages/client build:schema
@@ -78,6 +78,9 @@ jobs:
 
       - name: stage release packages
         run: bun run scripts/stage-vellum-release.ts "$VERSION"
+
+      - name: package release tarballs
+        run: bun run scripts/package-vellum-release-tarballs.ts "$VERSION"
 
       - name: configure npm auth
         env:
@@ -120,10 +123,28 @@ jobs:
             npm publish --access public --tag "$NPM_TAG"
           fi
 
-      - name: tag and push
+      - name: create GitHub release
+        if: ${{ inputs.dry_run == false }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release create "vellum-cli-v${VERSION}" \
+            apps/release/tarballs/*.tar.gz \
+            --title "vellum-cli v${VERSION}" \
+            --generate-notes
+
+      - name: bump homebrew formula
+        if: ${{ inputs.dry_run == false }}
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: bun run scripts/bump-homebrew-vellum-formula.ts "$VERSION"
+
+      - name: commit homebrew formula
         if: ${{ inputs.dry_run == false }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "vellum-cli-v${VERSION}"
-          HUSKY=0 git push origin "vellum-cli-v${VERSION}"
+          git add homebrew-tap/Formula/vellum.rb
+          git diff --staged --quiet || git commit -m "chore(homebrew): vellum-cli@${VERSION}"
+          HUSKY=0 git push origin HEAD

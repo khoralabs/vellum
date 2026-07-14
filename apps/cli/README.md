@@ -7,6 +7,9 @@
 ## Quick start
 
 ```bash
+brew tap khoralabs/tap
+brew install vellum
+
 export VELLUM_BASE_URL=http://localhost:8790
 
 vellum keygen

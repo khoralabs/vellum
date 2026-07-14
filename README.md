@@ -32,4 +32,9 @@ bun run --filter '@khoralabs/vellum-daemon' typecheck
 
 ## Release
 
-Publish prebuilt CLI/daemon packages with the **release vellum-cli** workflow (`workflow_dispatch` on GitHub). Requires the `NPM_TOKEN` repository secret.
+Publish prebuilt CLI/daemon packages with the **release vellum-cli** workflow (`workflow_dispatch` on GitHub). Requires `NPM_TOKEN`. For Homebrew sync to [`khoralabs/homebrew-tap`](https://github.com/khoralabs/homebrew-tap), also set `HOMEBREW_TAP_TOKEN`.
+
+```bash
+brew tap khoralabs/tap
+brew install vellum
+```
