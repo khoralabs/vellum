@@ -49,7 +49,8 @@ jobs:
             echo "::error::KHORALABS_SUBMODULES_TOKEN secret is empty or unset"
             exit 1
           fi
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "git@github.com:"
+          # scp-style git@host:path URLs often skip url.insteadOf; rewrite to HTTPS first.
+          sed -i 's|git@github.com:|https://github.com/|g' .gitmodules
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule sync --recursive
           git submodule update --init --recursive
