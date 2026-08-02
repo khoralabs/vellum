@@ -1,11 +1,11 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
+import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-core/persistence";
 import type {
   FrameMultiplexOpenerApi,
   FrameSessionHandle,
   SessionInitNormalized,
-} from "@khoralabs/obp-frames-impl";
-import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-persistence";
+} from "@khoralabs/obp-wire";
 import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "@khoralabs/vellum-contracts";
 
 import { startVellumControlServer } from "./control-server";

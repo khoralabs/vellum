@@ -1,10 +1,10 @@
 import { Buffer } from "node:buffer";
-import { createWebSocketDuplexByteStream } from "@khoralabs/obp-byte-stream";
+import { createWebSocketDuplexByteStream } from "@khoralabs/obp-core";
 import {
   connectObpFrameChannelSession,
   type ObpFrameConnection,
   type ObpWebSocketConnectOptions,
-} from "@khoralabs/obp-transport-ws";
+} from "@khoralabs/obp-wire/ws";
 
 type ObpSessionResult = Awaited<ReturnType<typeof connectObpFrameChannelSession>>;
 

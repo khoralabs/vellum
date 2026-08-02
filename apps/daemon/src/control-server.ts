@@ -1,13 +1,13 @@
 import type { Database } from "bun:sqlite";
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
+import type { ObpPersistenceClient } from "@khoralabs/obp-core/persistence";
+import { type NbcTurnBody, parseNbcTurnBody } from "@khoralabs/obp-nbc";
 import {
   type FrameMultiplexOpenerApi,
   type FrameSessionHandle,
   normalizeSessionInit,
   sessionInitFromWire,
-} from "@khoralabs/obp-frames-impl";
-import { type NbcTurnBody, parseNbcTurnBody } from "@khoralabs/obp-nbc";
-import type { ObpPersistenceClient } from "@khoralabs/obp-persistence";
+} from "@khoralabs/obp-wire";
 import {
   ChainInitRequestSchema,
   type ChainInitResponse,

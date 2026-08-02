@@ -58,7 +58,7 @@ jobs:
       - name: verify submodules
         run: |
           set -euo pipefail
-          test -f vendor/obp/packages/bind-policy/package.json
+          test -f vendor/obp/packages/nbc/package.json
           test -f vendor/relay/packages/relay-client/package.json
           test -f vendor/libs/packages/cli-kit/package.json
 

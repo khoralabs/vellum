@@ -1,7 +1,7 @@
 import type { FlagMap } from "@khoralabs/cli-kit";
 import { boolFlag, strFlag } from "@khoralabs/cli-kit";
-import { RelayClient } from "@khoralabs/relay-client";
-import type { RelaySessionQuota } from "@khoralabs/relay-contracts";
+import { RelayClient } from "@khoralabs/relay/client";
+import type { RelaySessionQuota } from "@khoralabs/relay/contracts";
 import { listLocalVellumRows } from "@khoralabs/vellum-client";
 import { resolveAttachInviteToken } from "../flows/channel-attach-flow";
 import { promptInviteTokenIfMissing } from "../flows/channel-join-flow";

@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS vellum_session_keys (
   updated_ms INTEGER NOT NULL
 );`;
 
-/** Idempotent DDL for session bookkeeping (orthogonal to `@khoralabs/obp-persistence-sqlite`). */
+/** Idempotent DDL for session bookkeeping (orthogonal to `@khoralabs/obp-core/sqlite`). */
 export function ensureVellumMetaSchema(db: Database): void {
   db.run(META_DDL);
 }

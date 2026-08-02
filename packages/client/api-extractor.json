@@ -4,12 +4,8 @@
   "bundledPackages": [
     "@khoralabs/vellum-contracts",
     "@khoralabs/vellum-transport",
-    "@khoralabs/relay-client",
-    "@khoralabs/relay-crypto",
-    "@khoralabs/relay-mls",
-    "@khoralabs/obp-model",
-    "@khoralabs/nbc-bind-policy",
-    "@khoralabs/obp-frames-impl",
+    "@khoralabs/relay",
+    "@khoralabs/obp-core",
     "@khoralabs/obp-nbc"
   ],
   "apiReport": { "enabled": false },

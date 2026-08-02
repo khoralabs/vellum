@@ -43,14 +43,10 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@khoralabs/relay-client": "workspace:*",
-    "@khoralabs/relay-crypto": "workspace:*",
-    "@khoralabs/relay-mls": "workspace:*",
+    "@khoralabs/relay": "workspace:*",
     "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-frames-impl": "workspace:*",
-    "@khoralabs/obp-model": "workspace:*",
+    "@khoralabs/obp-core": "workspace:*",
     "@khoralabs/obp-nbc": "workspace:*",
-    "@khoralabs/nbc-bind-policy": "workspace:*",
     "@khoralabs/vellum-contracts": "workspace:*",
     "@khoralabs/vellum-transport": "workspace:*",
     "better-sqlite3": "^11.10.0",

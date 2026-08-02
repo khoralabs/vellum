@@ -4,7 +4,7 @@ Zod-backed types and helpers shared by the Vellum **CLI**, **daemon**, and **`@k
 
 Default local layout: `{dataDir}/vellum/channels/<channelId>/{vellum.json,obp.sqlite}`.
 
-**Normative behavior** lives in [`../spec/channel-relay-deployment.md`](../spec/channel-relay-deployment.md) (deployment), [`../spec/channel-control-protocol.md`](../spec/channel-control-protocol.md) (control plane), and [`.brain/technical/channel-lifecycle.md`](../../../.brain/technical/channel-lifecycle.md). Channel/session HTTP types live in `@khoralabs/relay-contracts`.
+**Normative behavior** lives in [`../spec/channel-relay-deployment.md`](../spec/channel-relay-deployment.md) (deployment), [`../spec/channel-control-protocol.md`](../spec/channel-control-protocol.md) (control plane), and [`.brain/technical/channel-lifecycle.md`](../../../.brain/technical/channel-lifecycle.md). Channel/session HTTP types live in `@khoralabs/relay/contracts`.
 
 Dependency-light: **`zod`** only. No Bun-specific APIs — safe to import anywhere in the workspace.
 

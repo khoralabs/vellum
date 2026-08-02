@@ -3,16 +3,16 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { identityPrivFromPersistableSigner, loadIdentity } from "@khoralabs/did-key-identity";
-import { validateNbcBindPayloadForPort } from "@khoralabs/nbc-bind-policy";
-import type { JsonDocument } from "@khoralabs/obp-model";
-import { RelayClient } from "@khoralabs/relay-client";
-import { base64UrlToBytes } from "@khoralabs/relay-crypto";
+import type { JsonDocument } from "@khoralabs/obp-core";
+import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
+import { RelayClient } from "@khoralabs/relay/client";
+import { base64UrlToBytes } from "@khoralabs/relay/crypto";
 import {
   fetchKeyPackageHttp,
   generateRouteHandle,
   MlsGroupSession,
   publishMlsWelcomeHttp,
-} from "@khoralabs/relay-mls";
+} from "@khoralabs/relay/mls";
 import {
   type ChainInitResponse,
   ChainInitResponseSchema,

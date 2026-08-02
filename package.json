@@ -6,8 +6,10 @@
     "apps/*",
     "packages/*",
     "vendor/libs/packages/*/**",
-    "vendor/obp/packages/*/**",
-    "vendor/relay/*/**"
+    "vendor/obp/packages/*",
+    "vendor/obp/packages/react/examples",
+    "vendor/relay/packages/*",
+    "vendor/relay/apps/*"
   ],
   "scripts": {
     "format": "biome check --write .",

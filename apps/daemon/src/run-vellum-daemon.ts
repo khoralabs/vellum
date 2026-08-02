@@ -3,16 +3,14 @@ import path from "node:path";
 
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import { createHexSigner, identityPrivFromPersistableSigner } from "@khoralabs/did-key-identity";
-import { validateNbcBindPayloadForPort } from "@khoralabs/nbc-bind-policy";
-import type { JsonDocument } from "@khoralabs/obp-model";
-import {
-  createObpSqlitePersistenceClient,
-  openObpDatabase,
-} from "@khoralabs/obp-sqlite-persistence";
-import { RelayClient } from "@khoralabs/relay-client";
-import { relayWsUpgradeProtocol } from "@khoralabs/relay-contracts";
-import { base64UrlToBytes } from "@khoralabs/relay-crypto";
-import { fetchMlsWelcomeHttp, MlsGroupSession } from "@khoralabs/relay-mls";
+import type { JsonDocument } from "@khoralabs/obp-core";
+import { createObpSqlitePersistenceClient, openObpDatabase } from "@khoralabs/obp-core/sqlite";
+import { validateBindPolicyAtExpose } from "@khoralabs/obp-nbc";
+import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
+import { RelayClient } from "@khoralabs/relay/client";
+import { relayWsUpgradeProtocol } from "@khoralabs/relay/contracts";
+import { base64UrlToBytes } from "@khoralabs/relay/crypto";
+import { fetchMlsWelcomeHttp, MlsGroupSession } from "@khoralabs/relay/mls";
 import { cfgDataDir, channelSqlitePath, type VellumPathConfig } from "@khoralabs/vellum-contracts";
 import {
   readVellumControlFile,
@@ -62,7 +60,7 @@ export function runVellumDaemon(opts: RunVellumDaemonOptions): {
 
     const db = openObpDatabase(sqlitePath);
     ensureVellumMetaSchema(db);
-    const persistence = createObpSqlitePersistenceClient(db);
+    const persistence = createObpSqlitePersistenceClient(db, { validateBindPolicyAtExpose });
 
     const state: VellumControlServerState = {
       conn: undefined,
