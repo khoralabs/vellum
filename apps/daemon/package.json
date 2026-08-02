@@ -21,7 +21,7 @@
     "@khoralabs/obp-core": "workspace:*",
     "@khoralabs/obp-nbc": "workspace:*",
     "@khoralabs/obp-wire": "workspace:*",
-    "@khoralabs/relay": "workspace:*",
+    "@khoralabs/relay": "^0.1.1",
     "@khoralabs/vellum-client": "workspace:*",
     "@khoralabs/vellum-contracts": "workspace:*"
   },

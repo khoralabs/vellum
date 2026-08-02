@@ -7,18 +7,15 @@
     "packages/*",
     "vendor/libs/packages/*/**",
     "vendor/obp/packages/*",
-    "vendor/obp/packages/react/examples",
-    "vendor/relay/packages/*",
-    "vendor/relay/apps/*"
+    "vendor/obp/packages/react/examples"
   ],
   "scripts": {
     "format": "biome check --write .",
     "format:check": "biome check .",
     "typecheck": "bun run --filter '@khoralabs/vellum-*' typecheck",
     "submodules:init": "git submodule update --init --recursive",
-    "submodules:update": "git submodule update --remote --merge vendor/obp vendor/relay vendor/libs && bun install",
+    "submodules:update": "git submodule update --remote --merge vendor/obp vendor/libs && bun install",
     "submodules:update:obp": "git submodule update --remote --merge vendor/obp && bun install",
-    "submodules:update:relay": "git submodule update --remote --merge vendor/relay && bun install",
     "submodules:update:libs": "git submodule update --remote --merge vendor/libs && bun install",
     "prepare": "husky"
   },

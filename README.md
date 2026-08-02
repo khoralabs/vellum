@@ -5,7 +5,7 @@ Vellum monorepo: NBC channel CLI, daemon, and client libraries.
 ## Setup
 
 ```bash
-bun run submodules:init   # vendor/obp, vendor/relay, vendor/libs
+bun run submodules:init   # vendor/obp, vendor/libs
 bun install
 ```
 
@@ -13,7 +13,8 @@ Workspace packages come from this repo (`apps/*`, `packages/*`) plus vendor subm
 
 - `vendor/libs` — shared libs (`cli-kit`, …)
 - `vendor/obp` — Open Binding Protocol packages
-- `vendor/relay` — relay client / MLS / server packages
+
+Relay is a normal dependency: `@khoralabs/relay` from npm.
 
 ## Format / husky
 

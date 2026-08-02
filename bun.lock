@@ -21,7 +21,7 @@
         "@khoralabs/cli-kit": "workspace:*",
         "@khoralabs/did-key-identity": "^0.1.0",
         "@khoralabs/obp-nbc": "workspace:*",
-        "@khoralabs/relay": "workspace:*",
+        "@khoralabs/relay": "^0.1.1",
         "@khoralabs/vellum-client": "workspace:*",
         "@khoralabs/vellum-contracts": "workspace:*",
       },
@@ -41,7 +41,7 @@
         "@khoralabs/obp-core": "workspace:*",
         "@khoralabs/obp-nbc": "workspace:*",
         "@khoralabs/obp-wire": "workspace:*",
-        "@khoralabs/relay": "workspace:*",
+        "@khoralabs/relay": "^0.1.1",
         "@khoralabs/vellum-client": "workspace:*",
         "@khoralabs/vellum-contracts": "workspace:*",
       },
@@ -55,12 +55,12 @@
     },
     "packages/client": {
       "name": "@khoralabs/vellum-client",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@khoralabs/did-key-identity": "^0.1.0",
         "@khoralabs/obp-core": "workspace:*",
         "@khoralabs/obp-nbc": "workspace:*",
-        "@khoralabs/relay": "workspace:*",
+        "@khoralabs/relay": "^0.1.1",
         "@khoralabs/vellum-contracts": "workspace:*",
         "@khoralabs/vellum-transport": "workspace:*",
         "better-sqlite3": "^11.10.0",
@@ -267,47 +267,6 @@
         "typescript": "^5",
       },
     },
-    "vendor/relay/apps/relay-server": {
-      "name": "@khoralabs/relay-server",
-      "version": "0.0.0",
-      "dependencies": {
-        "@khoralabs/relay": "workspace:*",
-      },
-      "devDependencies": {
-        "@khoralabs/sqlite-crypto": "^0.1.0",
-        "@noble/ed25519": "^3.1.0",
-        "@types/bun": "latest",
-        "typescript": "^5",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "vendor/relay/packages/relay": {
-      "name": "@khoralabs/relay",
-      "version": "0.1.1",
-      "dependencies": {
-        "@hpke/core": "^1.9.0",
-        "@noble/curves": "^2.2.0",
-        "@noble/ed25519": "^3.1.0",
-        "@noble/hashes": "^2.2.0",
-        "@scure/base": "^1.2.6",
-        "lru-cache": "^11.5.1",
-        "ts-mls": "^1.6.2",
-      },
-      "devDependencies": {
-        "@khoralabs/sqlite-crypto": "^0.1.0",
-        "@types/bun": "latest",
-        "typescript": "^5",
-      },
-      "peerDependencies": {
-        "@khoralabs/sqlite-crypto": "^0.1.0",
-        "typescript": "^5",
-      },
-      "optionalPeers": [
-        "@khoralabs/sqlite-crypto",
-      ],
-    },
   },
   "packages": {
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.11.1", "", {}, "sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ=="],
@@ -362,11 +321,7 @@
 
     "@khoralabs/observability": ["@khoralabs/observability@workspace:vendor/libs/packages/observability"],
 
-    "@khoralabs/relay": ["@khoralabs/relay@workspace:vendor/relay/packages/relay"],
-
-    "@khoralabs/relay-server": ["@khoralabs/relay-server@workspace:vendor/relay/apps/relay-server"],
-
-    "@khoralabs/sqlite-crypto": ["@khoralabs/sqlite-crypto@0.1.0", "", {}, "sha512-HTpnQtwaPQDD0J5fwk9w8o47cs1HrhTBYEL5SKUlEMuvUdcqC/JgEZzwMqeT7wIZQLPdrBuPoHJMyrAkyVJGDw=="],
+    "@khoralabs/relay": ["@khoralabs/relay@0.1.1", "", { "dependencies": { "@hpke/core": "^1.9.0", "@noble/curves": "^2.2.0", "@noble/ed25519": "^3.1.0", "@noble/hashes": "^2.2.0", "@scure/base": "^1.2.6", "lru-cache": "^11.5.1", "ts-mls": "^1.6.2" }, "peerDependencies": { "@khoralabs/sqlite-crypto": "^0.1.0", "typescript": "^5" }, "optionalPeers": ["@khoralabs/sqlite-crypto"] }, "sha512-wrkX3g6oe9/KjsZpKhxnd6V0AYXZe53eGKAFMguKBgL0aq0ZYrkbF4miMCAUPlqI6jI25u5V9oAe9ExsaNvBLQ=="],
 
     "@khoralabs/vellum-cli": ["@khoralabs/vellum-cli@workspace:apps/cli"],
 

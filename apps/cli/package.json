@@ -14,7 +14,7 @@
     "@khoralabs/did-key-identity": "^0.1.0",
     "@khoralabs/cli-kit": "workspace:*",
     "@khoralabs/obp-nbc": "workspace:*",
-    "@khoralabs/relay": "workspace:*",
+    "@khoralabs/relay": "^0.1.1",
     "@khoralabs/vellum-client": "workspace:*",
     "@khoralabs/vellum-contracts": "workspace:*"
   },

@@ -1,2 +1,0 @@
-[test]
-preload = ["./vendor/relay/packages/relay/src/testing/preload-sqlcipher.ts"]

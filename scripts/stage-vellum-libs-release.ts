@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Stage @khoralabs/vellum-client under release/ for npm publish (outside Bun workspaces).
- * Contracts / transport / relay / OBP workspace deps are bundled into the client artifact.
+ * Contracts / transport / OBP workspace deps and npm @khoralabs/relay are bundled into the client artifact.
  */
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";

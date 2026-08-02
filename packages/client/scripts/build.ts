@@ -21,7 +21,6 @@ const publicExternals = ["@khoralabs/did-key-identity", "zod", "better-sqlite3"]
 const bundledTypePackages = [
   { dir: path.join(repoRoot, "packages/contracts"), name: "@khoralabs/vellum-contracts" },
   { dir: path.join(repoRoot, "packages/transport"), name: "@khoralabs/vellum-transport" },
-  { dir: path.join(repoRoot, "vendor/relay/packages/relay"), name: "@khoralabs/relay" },
   { dir: path.join(repoRoot, "vendor/obp/packages/core"), name: "@khoralabs/obp-core" },
   { dir: path.join(repoRoot, "vendor/obp/packages/nbc"), name: "@khoralabs/obp-nbc" },
 ] as const;

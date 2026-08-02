@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!!vendor/obp", "!!vendor/relay", "!!vendor/libs"]
+    "includes": ["**", "!!vendor/obp", "!!vendor/libs"]
   },
   "formatter": {
     "enabled": true,
