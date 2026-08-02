@@ -14,6 +14,7 @@
   "scripts": {
     "format": "biome check --write .",
     "format:check": "biome check .",
+    "typecheck": "bun run --filter '@khoralabs/vellum-*' typecheck",
     "submodules:init": "git submodule update --init --recursive",
     "submodules:update": "git submodule update --remote --merge vendor/obp vendor/relay vendor/libs && bun install",
     "submodules:update:obp": "git submodule update --remote --merge vendor/obp && bun install",

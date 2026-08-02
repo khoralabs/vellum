@@ -19,16 +19,11 @@ Workspace packages come from this repo (`apps/*`, `packages/*`) plus vendor subm
 
 ```bash
 bun run format          # Biome write
-bun run format:check    # Biome check (also runs on git pre-push via husky)
+bun run format:check    # Biome check
+bun run typecheck       # tsc across @khoralabs/vellum-* packages
 ```
 
-## Typecheck
-
-```bash
-bun run --filter '@khoralabs/vellum-cli' typecheck
-bun run --filter '@khoralabs/vellum-client' typecheck
-bun run --filter '@khoralabs/vellum-daemon' typecheck
-```
+Husky **pre-push** runs `format:check` and `typecheck`. CI (`.github/workflows/ci.yml`) runs the same plus first-party tests.
 
 ## Release
 
