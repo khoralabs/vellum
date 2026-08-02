@@ -18,9 +18,9 @@
   },
   "dependencies": {
     "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "workspace:*",
-    "@khoralabs/obp-nbc": "workspace:*",
-    "@khoralabs/obp-wire": "workspace:*",
+    "@khoralabs/obp-core": "^0.1.0",
+    "@khoralabs/obp-nbc": "^0.1.0",
+    "@khoralabs/obp-wire": "^0.1.0",
     "@khoralabs/relay": "^0.1.1",
     "@khoralabs/vellum-client": "workspace:*",
     "@khoralabs/vellum-contracts": "workspace:*"

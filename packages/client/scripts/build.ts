@@ -15,14 +15,18 @@ const distDir = path.join(root, "dist");
 const dtsOutDir = path.join(root, ".dts-build");
 const entry = path.join(root, "src/index.ts");
 
-const publicExternals = ["@khoralabs/did-key-identity", "zod", "better-sqlite3"] as const;
+const publicExternals = [
+  "@khoralabs/did-key-identity",
+  "@khoralabs/obp-core",
+  "@khoralabs/obp-nbc",
+  "zod",
+  "better-sqlite3",
+] as const;
 
 /** Workspace packages whose types must be .d.ts for API Extractor, then rolled into client. */
 const bundledTypePackages = [
   { dir: path.join(repoRoot, "packages/contracts"), name: "@khoralabs/vellum-contracts" },
   { dir: path.join(repoRoot, "packages/transport"), name: "@khoralabs/vellum-transport" },
-  { dir: path.join(repoRoot, "vendor/obp/packages/core"), name: "@khoralabs/obp-core" },
-  { dir: path.join(repoRoot, "vendor/obp/packages/nbc"), name: "@khoralabs/obp-nbc" },
 ] as const;
 
 type PkgJson = {

@@ -8,4 +8,4 @@ Shared libraries for **Vellum**: NBC session tooling on channels — contracts f
 | [`client/`](client) | `@khoralabs/vellum-client` | `VellumClient`, `VellumChannelClient`, config, SQLite reads |
 | [`transport/`](transport) | `@khoralabs/vellum-transport` | Daemon control HTTP transport |
 
-NBC bind-payload validation lives in the OBP submodule: `@khoralabs/obp-nbc/bind-policy` (`vendor/obp/packages/nbc`).
+NBC bind-payload validation lives in `@khoralabs/obp-nbc/bind-policy` (npm).

@@ -1,6 +1,3 @@
-[submodule "vendor/obp"]
-	path = vendor/obp
-	url = git@github.com:khoralabs/open-binding-protocol.git
 [submodule "vendor/libs"]
 	path = vendor/libs
 	url = git@github.com:khoralabs/libs.git

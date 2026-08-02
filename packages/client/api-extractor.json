@@ -4,9 +4,7 @@
   "bundledPackages": [
     "@khoralabs/vellum-contracts",
     "@khoralabs/vellum-transport",
-    "@khoralabs/relay",
-    "@khoralabs/obp-core",
-    "@khoralabs/obp-nbc"
+    "@khoralabs/relay"
   ],
   "apiReport": { "enabled": false },
   "docModel": { "enabled": false },

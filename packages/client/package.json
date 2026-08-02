@@ -45,8 +45,8 @@
   "dependencies": {
     "@khoralabs/relay": "^0.1.1",
     "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "workspace:*",
-    "@khoralabs/obp-nbc": "workspace:*",
+    "@khoralabs/obp-core": "^0.1.0",
+    "@khoralabs/obp-nbc": "^0.1.0",
     "@khoralabs/vellum-contracts": "workspace:*",
     "@khoralabs/vellum-transport": "workspace:*",
     "better-sqlite3": "^11.10.0",
