@@ -7,10 +7,9 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
+      # GITHUB_TOKEN cannot clone sibling private org repos (e.g. libs).
+      # Submodules are initialized in the next step with KHORALABS_SUBMODULES_TOKEN.
       - uses: actions/checkout@v4
-        with:
-          # GITHUB_TOKEN cannot clone sibling private org repos (e.g. libs).
-          # Submodules are initialized in the next step with KHORALABS_SUBMODULES_TOKEN.
 
       - name: init submodules
         env:
