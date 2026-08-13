@@ -2,11 +2,32 @@
 export type VellumFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /**
- * Low-level HTTP-style access to the vellum daemon control server (`127.0.0.1:port`).
- * Future bindings (Unix socket, in-process queue) implement the same surface over synthetic Responses if needed.
+ * Low-level HTTP-style access to the vellum control plane.
+ * Implementations: loopback HTTP ({@link FetchVellumControlTransport}) and
+ * in-process dispatch ({@link InProcessControlTransport}).
  */
 export interface VellumControlTransport {
   fetch(path: string, init?: RequestInit): Promise<Response>;
+}
+
+/** Synthetic Request dispatcher shared with Bun.serve / session control. */
+export type VellumControlDispatchFn = (req: Request) => Promise<Response>;
+
+/**
+ * Route control POSTs through an in-process dispatcher (no loopback HTTP).
+ * Used by {@link VellumPool} / embedded {@link runVellumSession}.
+ */
+export class InProcessControlTransport implements VellumControlTransport {
+  readonly #dispatch: VellumControlDispatchFn;
+
+  constructor(dispatch: VellumControlDispatchFn) {
+    this.#dispatch = dispatch;
+  }
+
+  fetch(path: string, init?: RequestInit): Promise<Response> {
+    const p = path.startsWith("/") ? path : `/${path}`;
+    return this.#dispatch(new Request(`http://vellum.local${p}`, init));
+  }
 }
 
 export type FetchVellumControlTransportOptions = {

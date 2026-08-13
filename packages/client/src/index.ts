@@ -28,6 +28,7 @@ export type { VellumReadModel } from "./persistence/vellum-read-persistence";
 export {
   createVellumControlTransportFromEnv,
   FetchVellumControlTransport,
+  InProcessControlTransport,
   type VellumControlTransport,
   type VellumFetch,
 } from "./transport";

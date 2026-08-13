@@ -14,6 +14,7 @@ describe("stage vellum libs helpers", () => {
       "./session",
       "./persistence",
       "./sqlite",
+      "./pool",
     ] as const) {
       const s = exports[sub] as Record<string, string>;
       expect(s.types.startsWith("./dist/")).toBe(true);

@@ -19,6 +19,7 @@ import {
 } from "../control-file";
 import type { VellumMetaPersistence } from "../persistence/core/types";
 import { createVellumMetaPersistence } from "../persistence/sqlite/meta-persistence";
+import { InProcessControlTransport, type VellumControlTransport } from "../transport";
 import { startVellumControlServer, type VellumControlServerState } from "./control-server";
 import { connectObpOverRelay } from "./relay-obp-adapter";
 
@@ -50,16 +51,23 @@ export type VellumSessionHandle = {
   close(): void;
   /** Resolves when control plane is up; rejects on boot/WS failure. */
   ready: Promise<void>;
+  /**
+   * In-process control transport. Available after {@link ready} resolves.
+   * @throws if accessed before the control plane is ready
+   */
+  readonly controlTransport: VellumControlTransport;
 };
 
 /**
  * Hold a Vellum channel WebSocket with durable OBP v2 graph in SQLite and a local HTTP control plane.
+ * Also exposes {@link VellumSessionHandle.controlTransport} for in-process hosts (no spawn).
  */
 export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHandle {
   const json = opts.json === true;
   const ac = new AbortController();
   let disposed = false;
   let serverStop: (() => void) | undefined;
+  let controlTransport: VellumControlTransport | undefined;
   let resolveReady!: () => void;
   let rejectReady!: (e: unknown) => void;
   let readySettled = false;
@@ -81,46 +89,65 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
   });
 
   void (async () => {
-    const sqlitePath = channelSqlitePath(cfgDataDir(opts.cfg), opts.channelId);
-    fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
-
-    const db = openObpDatabase(sqlitePath);
-    const meta = opts.meta ?? createVellumMetaPersistence(db);
-    meta.ensureSchema();
-    const persistence = createObpSqlitePersistenceClient(db, { validateBindPolicyAtExpose });
-
-    const state: VellumControlServerState = {
-      conn: undefined,
-      handles: new Map(),
-    };
-
-    const hexSigner = await createHexSigner(opts.signer);
-    const frameSigner = {
-      did: hexSigner.did,
-      actor: hexSigner.publicKeyHex,
-      sign: (bytes: Uint8Array) => hexSigner.sign(bytes),
-    };
-    const ed25519PrivKey = identityPrivFromPersistableSigner(opts.signer);
-    const channelClient = new RelayClient({
-      relayBaseUrl: opts.relayBaseUrl,
-      signer: opts.signer,
-    });
-
-    const kpm = channelClient.createKeyPackageManager(frameSigner.did, ed25519PrivKey);
-    await kpm.replenishIfNeeded();
-    kpm.startAutoReplenish({
-      onGiveUp: (error, attempts) => {
-        const msg = error instanceof Error ? error.message : String(error);
-        logLine(json, "vellum_keypackage_replenish_fatal", { error: msg, attempts });
-        const err = error instanceof Error ? error : new Error(msg);
-        opts.onFatal?.(err);
-        rejectReady(err);
-        ac.abort();
-      },
-    });
-    logLine(json, "vellum_keypackages_published", { did: frameSigner.did });
+    let db: ReturnType<typeof openObpDatabase> | undefined;
+    let kpm: ReturnType<RelayClient["createKeyPackageManager"]> | undefined;
 
     try {
+      const sqlitePath = channelSqlitePath(cfgDataDir(opts.cfg), opts.channelId);
+      fs.mkdirSync(path.dirname(sqlitePath), { recursive: true });
+
+      db = openObpDatabase(sqlitePath);
+      const database = db;
+      const meta = opts.meta ?? createVellumMetaPersistence(database);
+      meta.ensureSchema();
+      const persistence = createObpSqlitePersistenceClient(database, {
+        validateBindPolicyAtExpose,
+      });
+
+      const state: VellumControlServerState = {
+        conn: undefined,
+        handles: new Map(),
+      };
+
+      if (ac.signal.aborted) {
+        throw new DOMException("Vellum session closed before ready", "AbortError");
+      }
+
+      const hexSigner = await createHexSigner(opts.signer);
+      if (ac.signal.aborted) {
+        throw new DOMException("Vellum session closed before ready", "AbortError");
+      }
+
+      const frameSigner = {
+        did: hexSigner.did,
+        actor: hexSigner.publicKeyHex,
+        sign: (bytes: Uint8Array) => hexSigner.sign(bytes),
+      };
+      const ed25519PrivKey = identityPrivFromPersistableSigner(opts.signer);
+      const channelClient = new RelayClient({
+        relayBaseUrl: opts.relayBaseUrl,
+        signer: opts.signer,
+      });
+
+      kpm = channelClient.createKeyPackageManager(frameSigner.did, ed25519PrivKey);
+      const keyPackageManager = kpm;
+      await keyPackageManager.replenishIfNeeded();
+      if (ac.signal.aborted) {
+        throw new DOMException("Vellum session closed before ready", "AbortError");
+      }
+
+      keyPackageManager.startAutoReplenish({
+        onGiveUp: (error, attempts) => {
+          const msg = error instanceof Error ? error.message : String(error);
+          logLine(json, "vellum_keypackage_replenish_fatal", { error: msg, attempts });
+          const err = error instanceof Error ? error : new Error(msg);
+          opts.onFatal?.(err);
+          rejectReady(err);
+          ac.abort();
+        },
+      });
+      logLine(json, "vellum_keypackages_published", { did: frameSigner.did });
+
       logLine(json, "vellum_open", { channelId: opts.channelId, sqlitePath });
       const wsNonce = opts.webSocketNonce?.trim() ?? process.env.VELLUM_CHANNEL_WS_NONCE?.trim();
       const webSocketProtocols =
@@ -152,7 +179,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
                     handle.sessionId,
                   );
                   const welcomeBytes = base64UrlToBytes(fetched.welcome);
-                  const stored = await kpm.listStoredKeyPackages();
+                  const stored = await keyPackageManager.listStoredKeyPackages();
                   let joined = false;
                   for (const s of stored) {
                     try {
@@ -227,7 +254,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
 
           const server = startVellumControlServer({
             state,
-            db,
+            db: database,
             meta,
             persistence,
             signer: opts.signer,
@@ -236,6 +263,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
               channelClient.isSessionAllocated(opts.channelId, sessionId),
           });
           serverStop = server.stop;
+          controlTransport = new InProcessControlTransport(server.dispatch);
           const existing = readVellumControlFile(opts.cfg, opts.channelId);
           const initialLastBlobId = opts.lastBlobId ?? existing?.lastBlobId;
           writeVellumControlFile(opts.cfg, opts.channelId, {
@@ -280,11 +308,11 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
         rejectReady(e);
       }
     } finally {
-      kpm.stopAutoReplenish();
+      kpm?.stopAutoReplenish();
       serverStop?.();
       removeVellumControlFile(opts.cfg, opts.channelId);
       try {
-        db.close();
+        db?.close();
       } catch {
         // ignore
       }
@@ -293,6 +321,12 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
 
   return {
     ready,
+    get controlTransport(): VellumControlTransport {
+      if (controlTransport === undefined) {
+        throw new Error("vellum session control transport not ready; await ready first");
+      }
+      return controlTransport;
+    },
     close(): void {
       if (disposed) return;
       disposed = true;

@@ -66,6 +66,12 @@
       "import": "./dist/persistence/sqlite/index.js",
       "default": "./dist/persistence/sqlite/index.js"
     },
+    "./pool": {
+      "bun": "./src/pool/index.ts",
+      "types": "./dist/pool/index.d.ts",
+      "import": "./dist/pool/index.js",
+      "default": "./dist/pool/index.js"
+    },
     "./vellum-config.schema.json": "./vellum-config.schema.json"
   },
   "scripts": {

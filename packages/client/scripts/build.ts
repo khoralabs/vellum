@@ -46,6 +46,7 @@ const entries: Entry[] = [
     outRel: "persistence/sqlite/index.js",
     target: "bun",
   },
+  { src: "src/pool/index.ts", outRel: "pool/index.js", target: "bun" },
 ];
 
 rmSync(distDir, { recursive: true, force: true });
