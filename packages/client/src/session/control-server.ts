@@ -14,7 +14,7 @@ import {
   type ChainStateResponse,
   TurnRequestSchema,
 } from "../contracts";
-import type { VellumMetaPersistence } from "../persistence/core/types";
+import type { VellumPersistence } from "../persistence/core/types";
 
 function parseGenesisTurnOrThrow(raw: Record<string, unknown>) {
   const nb = parseNbcTurnBody(raw);
@@ -40,7 +40,8 @@ export type CreateVellumControlDispatchOptions = {
   state: VellumControlServerState;
   /** OBP sqlite for graph summary counts only (not vellum_* meta). */
   db: Database;
-  meta: VellumMetaPersistence;
+  /** Vellum bookkeeping + graph reads (named `meta` to avoid clashing with OBP `persistence`). */
+  meta: VellumPersistence;
   persistence: ObpPersistenceClient;
   signer: PersistableSigner;
   myActorPubkeyHex: string;

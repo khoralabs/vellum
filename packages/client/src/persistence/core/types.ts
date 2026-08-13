@@ -1,9 +1,11 @@
+import type { VellumChainRow, VellumOfferRow, VellumPortRow } from "../../contracts";
+
 /**
- * Session bookkeeping persistence (chains, roster, prekeys, session keys).
- * Orthogonal to `@khoralabs/obp-core/sqlite` NBC graph tables.
- * Implementations must not leak driver types into session/control callers.
+ * Channel store persistence: vellum_* bookkeeping plus OBP graph reads.
+ * Orthogonal to `@khoralabs/obp-core/sqlite` NBC graph writers.
+ * Implementations must not leak driver types into session/control/client callers.
  */
-export interface VellumMetaPersistence {
+export interface VellumPersistence {
   ensureSchema(): void;
 
   upsertChain(sessionId: string, genesisHash: string, createdMs: number): void;
@@ -23,6 +25,13 @@ export interface VellumMetaPersistence {
 
   upsertSessionKey(sessionId: string, sessionKeyHex: string, updatedMs: number): void;
 
-  /** List chain rows for control-plane snapshots. */
-  listChains(): Array<{ session_id: string; genesis_hash: string; created_ms: number }>;
+  listChains(): VellumChainRow[];
+
+  listOffers(): VellumOfferRow[];
+
+  readOffer(offerId: string): VellumOfferRow | undefined;
+
+  listPortIdsForOffer(offerId: string): string[];
+
+  readPort(portId: string): VellumPortRow | undefined;
 }

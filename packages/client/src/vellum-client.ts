@@ -36,8 +36,8 @@ import {
 import { readVellumControlFile, removeVellumControlFile } from "./control-file";
 import { requireVellumIdentity } from "./identity";
 import { isPidAlive } from "./list-local-vellum";
-import { SqliteVellumReadModel } from "./persistence/sqlite-vellum-read-persistence";
-import type { VellumReadModel } from "./persistence/vellum-read-persistence";
+import type { VellumPersistence } from "./persistence/core/types";
+import { createVellumPersistenceAtPath } from "./persistence/sqlite/vellum-persistence";
 import { createVellumControlTransportFromEnv, type VellumControlTransport } from "./transport";
 
 export type VellumConnectResult = "spawned" | "already-running";
@@ -47,8 +47,8 @@ export type VellumClientOptions = {
   relayBaseUrl: string;
   channelId: string;
   dataDir?: string | undefined;
-  /** Override how channel metadata is read (defaults to SQLite under the configured data dir). */
-  readPersistence?: VellumReadModel | undefined;
+  /** Override channel store access (defaults to Bun SQLite under the configured data dir). */
+  persistence?: VellumPersistence | undefined;
   /** Defaults to env-selected HTTP (`VELLUM_CONTROL_TRANSPORT`, default `http`). */
   controlTransport?: VellumControlTransport | undefined;
   /** Override the agent identity key path (overrides env vars and defaultAgentIdentityPath). */
@@ -175,7 +175,7 @@ function httpFailMessage(statusText: string, j: unknown): string {
 export class VellumClient {
   readonly pathConfig: VellumPathConfig;
 
-  private readonly reads: VellumReadModel;
+  private readonly store: VellumPersistence;
   private cachedControlTransport: VellumControlTransport | undefined;
 
   constructor(public readonly opts: VellumClientOptions) {
@@ -183,9 +183,9 @@ export class VellumClient {
     this.pathConfig = {
       dataDir: d !== undefined && d.length > 0 ? d : undefined,
     };
-    this.reads =
-      opts.readPersistence ??
-      new SqliteVellumReadModel(channelSqlitePath(cfgDataDir(this.pathConfig), opts.channelId));
+    this.store =
+      opts.persistence ??
+      createVellumPersistenceAtPath(channelSqlitePath(cfgDataDir(this.pathConfig), opts.channelId));
   }
 
   private async resolveSigner(): Promise<PersistableSigner> {
@@ -417,23 +417,23 @@ export class VellumClient {
   }
 
   listChainsFromStore(): VellumChainRow[] {
-    return this.reads.listChains();
+    return this.store.listChains();
   }
 
   listOffers(): VellumOfferRow[] {
-    return this.reads.listOffers();
+    return this.store.listOffers();
   }
 
   readOffer(offerId: string): VellumOfferRow | undefined {
-    return this.reads.readOffer(offerId);
+    return this.store.readOffer(offerId);
   }
 
   listPortsForOffer(offerId: string): string[] {
-    return this.reads.listPortIdsForOffer(offerId);
+    return this.store.listPortIdsForOffer(offerId);
   }
 
   readPort(portId: string): VellumPortRow | undefined {
-    return this.reads.readPort(portId);
+    return this.store.readPort(portId);
   }
 
   readPolicySnapshot(portId: string): unknown | null {

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Unified `VellumMetaPersistence` and `VellumReadModel` into `VellumPersistence` (`createVellumPersistence` / `createVellumPersistenceAtPath`). Session/attachment option `meta` → `persistence`; `VellumClient` option `readPersistence` → `persistence`.
+- Default channel SQLite access uses `bun:sqlite` only (no `better-sqlite3`).
+
+### Removed
+
+- `better-sqlite3` dependency and `SqliteVellumReadModel` / `VellumReadModel` / `VellumMetaPersistence` public surface.
+- API Extractor from the client publish build (ship `tsc` declaration tree as `dist/index.d.ts`).
+
 ## [0.2.0] - 2026-08-13
 
 ### Added
@@ -16,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `InProcessControlTransport` so hosts can drive control ops without loopback HTTP.
 - `VellumClient` options `signer` and `identitySecret` (sealed identity load + wrap-key env for spawned daemons).
 - Channel helpers on the client: `createChannel` / `joinChannel`, shared control-file IO, and identity load helpers.
-- `VellumMetaPersistence` contract plus Bun SQLite reference (`./persistence`, `./sqlite`).
+- `VellumPersistence` contract plus Bun SQLite reference (`./persistence`, `./sqlite`) — unified meta bookkeeping and OBP graph reads.
 - GitHub Actions CI (format, typecheck, tests) and husky pre-commit (Biome + typecheck).
 - Agent-review commit-msg / operator skills integration.
 

@@ -37,7 +37,6 @@ export function stagedDependencies(
 ): Record<string, string> {
   return {
     "@khoralabs/did-key-identity": "^0.1.0",
-    "better-sqlite3": "^11.10.0",
     zod: "^4",
   };
 }

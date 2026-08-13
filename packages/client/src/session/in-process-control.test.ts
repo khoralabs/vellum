@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
 import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-core/persistence";
-import { createVellumMetaPersistence } from "../persistence/sqlite/meta-persistence";
+import { createVellumPersistence } from "../persistence/sqlite/vellum-persistence";
 import { InProcessControlTransport } from "../transport";
 import { createVellumControlDispatch, type VellumControlServerState } from "./control-server";
 import { testControlSigner } from "./test-signer";
@@ -9,7 +9,7 @@ import { testControlSigner } from "./test-signer";
 describe("InProcessControlTransport", () => {
   test("dispatches /health without Bun.serve", async () => {
     const db = new Database(":memory:");
-    const meta = createVellumMetaPersistence(db);
+    const meta = createVellumPersistence(db);
     meta.ensureSchema();
     const state: VellumControlServerState = { conn: undefined, handles: new Map() };
     const dispatch = createVellumControlDispatch({
@@ -28,7 +28,7 @@ describe("InProcessControlTransport", () => {
 
   test("GET /chain returns empty snapshot", async () => {
     const db = new Database(":memory:");
-    const meta = createVellumMetaPersistence(db);
+    const meta = createVellumPersistence(db);
     meta.ensureSchema();
     // OBP tables for counts — openObp schema not present; counts may throw.
     // create tables minimally or catch — control uses obpTableCount on missing tables.

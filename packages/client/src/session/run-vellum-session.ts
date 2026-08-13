@@ -17,8 +17,8 @@ import {
   removeVellumControlFile,
   writeVellumControlFile,
 } from "../control-file";
-import type { VellumMetaPersistence } from "../persistence/core/types";
-import { createVellumMetaPersistence } from "../persistence/sqlite/meta-persistence";
+import type { VellumPersistence } from "../persistence/core/types";
+import { createVellumPersistence } from "../persistence/sqlite/vellum-persistence";
 import { InProcessControlTransport, type VellumControlTransport } from "../transport";
 import { startVellumControlServer, type VellumControlServerState } from "./control-server";
 import { connectObpOverRelay } from "./relay-obp-adapter";
@@ -33,8 +33,8 @@ export type RunVellumSessionOptions = {
   lastBlobId?: number;
   json?: boolean;
   cfg: VellumPathConfig;
-  /** Injected meta store; defaults to SQLite on the channel OBP database. */
-  meta?: VellumMetaPersistence;
+  /** Injected store; defaults to SQLite on the channel OBP database. */
+  persistence?: VellumPersistence;
   /** Called on fatal KeyPackage replenish failure instead of process.exit. */
   onFatal?: (error: unknown) => void;
 };
@@ -98,8 +98,8 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
 
       db = openObpDatabase(sqlitePath);
       const database = db;
-      const meta = opts.meta ?? createVellumMetaPersistence(database);
-      meta.ensureSchema();
+      const vellum = opts.persistence ?? createVellumPersistence(database);
+      vellum.ensureSchema();
       const persistence = createObpSqlitePersistenceClient(database, {
         validateBindPolicyAtExpose,
       });
@@ -164,7 +164,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
             validateNbcBindPayloadForPort(bindPolicy, bindPayload) as JsonDocument,
           handlers: {
             onSessionReady: async (handle) => {
-              meta.upsertChain(handle.sessionId, handle.init.genesis_hash, Date.now());
+              vellum.upsertChain(handle.sessionId, handle.init.genesis_hash, Date.now());
               for (const party of handle.init.parties) {
                 await persistence.registerParty({ id: party.id, name: party.id });
               }
@@ -247,7 +247,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
           const snapshot = await channelClient.getRoster(opts.channelId);
           for (const m of snapshot.members) {
             if (m.actorPubkey !== undefined) {
-              meta.upsertRosterEntry(m.principalUri, m.actorPubkey, Date.now());
+              vellum.upsertRosterEntry(m.principalUri, m.actorPubkey, Date.now());
             }
           }
           logLine(json, "vellum_roster_synced", { members: snapshot.members.length });
@@ -255,7 +255,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
           const server = startVellumControlServer({
             state,
             db: database,
-            meta,
+            meta: vellum,
             persistence,
             signer: opts.signer,
             myActorPubkeyHex: frameSigner.actor,

@@ -1,7 +1,7 @@
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import { RelayClient } from "@khoralabs/relay/client";
 import type { VellumPathConfig } from "../contracts";
-import type { VellumMetaPersistence } from "../persistence/core/types";
+import type { VellumPersistence } from "../persistence/core/types";
 import type { VellumControlTransport } from "../transport";
 import { runVellumSession, type VellumSessionHandle } from "./run-vellum-session";
 
@@ -14,7 +14,7 @@ export type OpenVellumAttachmentOptions = {
   webSocketUrl?: string;
   webSocketNonce?: string;
   lastBlobId?: number;
-  meta?: VellumMetaPersistence;
+  persistence?: VellumPersistence;
   json?: boolean;
   onFatal?: (error: unknown) => void;
 };
@@ -78,7 +78,7 @@ export function openVellumAttachment(opts: OpenVellumAttachmentOptions): VellumA
       webSocketNonce,
       lastBlobId,
       cfg: opts.cfg,
-      meta: opts.meta,
+      persistence: opts.persistence,
       json: opts.json,
       onFatal: opts.onFatal,
     });

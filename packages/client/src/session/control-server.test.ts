@@ -7,14 +7,14 @@ import type {
   SessionInitNormalized,
 } from "@khoralabs/obp-wire";
 import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "../contracts";
-import { createVellumMetaPersistence } from "../persistence/sqlite/meta-persistence";
+import { createVellumPersistence } from "../persistence/sqlite/vellum-persistence";
 import { startVellumControlServer } from "./control-server";
 import { testControlSigner } from "./test-signer";
 
 const testSigner = testControlSigner("did:key:alice");
 
 function mkOpts(db: Database) {
-  const meta = createVellumMetaPersistence(db);
+  const meta = createVellumPersistence(db);
   meta.ensureSchema();
   return {
     meta,

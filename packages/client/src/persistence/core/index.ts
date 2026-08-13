@@ -1,1 +1,1 @@
-export type { VellumMetaPersistence } from "./types";
+export type { VellumPersistence } from "./types";

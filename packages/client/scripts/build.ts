@@ -2,11 +2,11 @@
 /**
  * Publish build for @khoralabs/vellum-client:
  * - JS: bun bundler (public packages external) for root + subpath entries
- * - .d.ts: tsc emit into dist (paths mirror src); API Extractor rollup for root index.d.ts
+ * - .d.ts: tsc emit into dist (paths mirror src)
  *
  * @see https://bun.com/docs/bundler
  */
-import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { cpSync, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dir, "..");
@@ -20,7 +20,6 @@ const publicExternals = [
   "@khoralabs/obp-wire",
   "@khoralabs/relay",
   "zod",
-  "better-sqlite3",
   "bun:sqlite",
 ] as const;
 
@@ -32,7 +31,7 @@ type Entry = {
 };
 
 const entries: Entry[] = [
-  { src: "src/index.ts", outRel: "index.js", target: "node" },
+  { src: "src/index.ts", outRel: "index.js", target: "bun" },
   { src: "src/contracts/index.ts", outRel: "contracts/index.js", target: "node" },
   { src: "src/transport/index.ts", outRel: "transport/index.js", target: "node" },
   { src: "src/session/index.ts", outRel: "session/index.js", target: "bun" },
@@ -78,13 +77,6 @@ if (clientDts.exitCode !== 0) {
 
 // Merge declaration tree into dist so subpath relative imports resolve.
 cpSync(dtsOutDir, distDir, { recursive: true });
-
-const extractor = await Bun.$`bunx api-extractor run --local --verbose`.cwd(root).nothrow();
-if (extractor.exitCode !== 0 || !existsSync(path.join(distDir, "index.d.ts"))) {
-  console.error(extractor.stderr.toString() || extractor.stdout.toString());
-  throw new Error("api-extractor rollup failed");
-}
-
 rmSync(dtsOutDir, { recursive: true, force: true });
 
 console.log(`built ${entries.map((e) => e.outRel).join(", ")} + .d.ts tree`);

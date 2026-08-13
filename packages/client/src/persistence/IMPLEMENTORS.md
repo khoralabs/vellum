@@ -1,6 +1,6 @@
-# Vellum meta persistence
+# Vellum persistence
 
-Operational contract for [`VellumMetaPersistence`](./core/types.ts).
+Operational contract for [`VellumPersistence`](./core/types.ts).
 
 ## Layout
 
@@ -8,7 +8,6 @@ Operational contract for [`VellumMetaPersistence`](./core/types.ts).
 |------|------|
 | [`./core`](./core) | Abstract interface (no driver) |
 | [`./sqlite`](./sqlite) | Reference Bun `bun:sqlite` implementation |
-| [`vellum-read-persistence.ts`](./vellum-read-persistence.ts) | Separate NBC graph **read** model for Node/`better-sqlite3` |
 
 ## Ops
 
@@ -17,6 +16,7 @@ Operational contract for [`VellumMetaPersistence`](./core/types.ts).
 - `upsertRosterEntry` / `getRosterActor` — principal → actor pubkey
 - `upsertPreKeySecrets` / `loadPreKeySecrets` — SPK + OTK private halves
 - `upsertSessionKey` — per-session key material
-- `listChains` — ordered snapshot for control plane
+- `listChains` — ordered snapshot for control plane / client
+- `listOffers` / `readOffer` / `listPortIdsForOffer` / `readPort` — OBP graph reads
 
-Session and control code must depend only on the interface. Default wiring uses `createVellumMetaPersistence(db)` on the channel OBP SQLite file.
+Session, control, and `VellumClient` depend only on the interface. Default wiring uses `createVellumPersistence(db)` on the channel OBP SQLite file (session) or `createVellumPersistenceAtPath(path)` (client). Default SQLite access requires Bun (`bun:sqlite`).

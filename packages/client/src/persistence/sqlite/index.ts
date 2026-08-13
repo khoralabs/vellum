@@ -1,1 +1,4 @@
-export { createVellumMetaPersistence } from "./meta-persistence";
+export {
+  createVellumPersistence,
+  createVellumPersistenceAtPath,
+} from "./vellum-persistence";

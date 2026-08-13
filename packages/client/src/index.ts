@@ -22,9 +22,11 @@ export {
   resolveVellumIdentityPath,
 } from "./identity";
 export { isPidAlive, type LocalVellumRow, listLocalVellumRows } from "./list-local-vellum";
-export type { VellumMetaPersistence } from "./persistence/core";
-export { SqliteVellumReadModel } from "./persistence/sqlite-vellum-read-persistence";
-export type { VellumReadModel } from "./persistence/vellum-read-persistence";
+export type { VellumPersistence } from "./persistence/core";
+export {
+  createVellumPersistence,
+  createVellumPersistenceAtPath,
+} from "./persistence/sqlite";
 export {
   createVellumControlTransportFromEnv,
   FetchVellumControlTransport,

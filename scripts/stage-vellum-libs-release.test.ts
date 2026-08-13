@@ -29,7 +29,7 @@ describe("stage vellum libs helpers", () => {
     const deps = stagedDependencies("vellum-client", "1.2.3");
     expect(deps["@khoralabs/vellum-contracts"]).toBeUndefined();
     expect(deps["@khoralabs/did-key-identity"]).toBe("^0.1.0");
-    expect(deps["better-sqlite3"]).toBe("^11.10.0");
+    expect(deps["better-sqlite3"]).toBeUndefined();
     expect(deps.zod).toBe("^4");
   });
 });
