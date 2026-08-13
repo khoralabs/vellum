@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { cfgDataDir, type VellumPathConfig, vellumStoreRoot } from "@khoralabs/vellum-contracts";
+import { cfgDataDir, type VellumPathConfig, vellumStoreRoot } from "./contracts";
 
 export type LocalVellumRow = {
   channelId: string;

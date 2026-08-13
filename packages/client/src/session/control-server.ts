@@ -13,8 +13,8 @@ import {
   type ChainInitResponse,
   type ChainStateResponse,
   TurnRequestSchema,
-} from "@khoralabs/vellum-contracts";
-import { getRosterActor, upsertChainRow } from "./vellum-sqlite-meta";
+} from "../contracts";
+import type { VellumMetaPersistence } from "../persistence/core/types";
 
 function parseGenesisTurnOrThrow(raw: Record<string, unknown>) {
   const nb = parseNbcTurnBody(raw);
@@ -50,7 +50,9 @@ function obpTableCount(db: Database, table: string): number {
 
 export function startVellumControlServer(opts: {
   state: VellumControlServerState;
+  /** OBP sqlite for graph summary counts only (not vellum_* meta). */
   db: Database;
+  meta: VellumMetaPersistence;
   persistence: ObpPersistenceClient;
   signer: PersistableSigner;
   myActorPubkeyHex: string;
@@ -62,7 +64,7 @@ export function startVellumControlServer(opts: {
   stop(): void;
 } {
   const mux = { tail: Promise.resolve() };
-  const { state, db, persistence, isSessionAllocated, signer, myActorPubkeyHex } = opts;
+  const { state, db, meta, persistence, isSessionAllocated, signer, myActorPubkeyHex } = opts;
   const myDid = signer.did;
   const server = Bun.serve({
     port: 0,
@@ -74,11 +76,7 @@ export function startVellumControlServer(opts: {
       }
 
       if (req.method === "GET" && url.pathname === "/chain") {
-        const rows = db
-          .query<{ session_id: string; genesis_hash: string; created_ms: number }, []>(
-            `SELECT session_id, genesis_hash, created_ms FROM vellum_chains ORDER BY created_ms ASC`,
-          )
-          .all();
+        const rows = meta.listChains();
         const chains = rows.map((r) => ({
           session_id: r.session_id,
           genesis_hash: r.genesis_hash,
@@ -133,7 +131,7 @@ export function startVellumControlServer(opts: {
 
           const [didA, didB] = wi.party_dids;
           const peerDid = didA === myDid ? didB : didA;
-          const peerPubkeyHex = getRosterActor(db, peerDid);
+          const peerPubkeyHex = meta.getRosterActor(peerDid);
           if (peerPubkeyHex === undefined) {
             return Response.json(
               { error: `peer not found in roster: ${peerDid}` },
@@ -151,7 +149,7 @@ export function startVellumControlServer(opts: {
           try {
             const handle = await state.conn.init(norm, {});
             state.handles.set(norm.session_id, handle);
-            upsertChainRow(db, norm.session_id, norm.genesis_hash, Date.now());
+            meta.upsertChain(norm.session_id, norm.genesis_hash, Date.now());
             for (const party of norm.parties) {
               await persistence.registerParty({ id: party.id, name: party.id });
             }

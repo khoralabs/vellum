@@ -1,4 +1,4 @@
-import type { VellumChainRow, VellumOfferRow, VellumPortRow } from "@khoralabs/vellum-contracts";
+import type { VellumChainRow, VellumOfferRow, VellumPortRow } from "../contracts";
 
 /**
  * Read side of persisted NBC / vellum metadata for one channel store.

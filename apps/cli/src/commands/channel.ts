@@ -1,15 +1,20 @@
 import type { FlagMap } from "@khoralabs/cli-kit";
 import { boolFlag, strFlag } from "@khoralabs/cli-kit";
-import { RelayClient } from "@khoralabs/relay/client";
-import type { RelaySessionQuota } from "@khoralabs/relay/contracts";
-import { listLocalVellumRows } from "@khoralabs/vellum-client";
+import {
+  createVellumChannel,
+  joinVellumChannel,
+  listLocalVellumRows,
+  type RelaySessionQuota,
+  requireVellumIdentity,
+} from "@khoralabs/vellum-client";
 import { resolveAttachInviteToken } from "../flows/channel-attach-flow";
 import { promptInviteTokenIfMissing } from "../flows/channel-join-flow";
 import {
+  agentIdentityPath,
   cliRelayBaseUrl,
   dataDirForEnv,
-  loadSigner,
   resolveChannelId,
+  resolveIdentitySecret,
   type VellumCliContext,
 } from "../flows/context";
 import { connectChannel, handleConnect, printChannelConnectResult } from "./connect";
@@ -30,13 +35,9 @@ function parseSessionLimit(raw: string | undefined): RelaySessionQuota | undefin
 }
 
 export async function handleChannelCreate(flags: FlagMap): Promise<void> {
-  const ttlRaw = strFlag(flags, "ttl-ms") ?? strFlag(flags, "ttlMs") ?? "";
-  const maxPopRaw = strFlag(flags, "max-population") ?? strFlag(flags, "maxPopulation");
-  const sessionLimitRaw =
-    strFlag(flags, "session-limit") ??
-    strFlag(flags, "sessionLimit") ??
-    strFlag(flags, "chain-limit") ??
-    strFlag(flags, "chainLimit");
+  const ttlRaw = strFlag(flags, "ttl-ms") ?? "";
+  const maxPopRaw = strFlag(flags, "max-population");
+  const sessionLimitRaw = strFlag(flags, "session-limit");
 
   const body: {
     ttlMs?: number;
@@ -57,17 +58,29 @@ export async function handleChannelCreate(flags: FlagMap): Promise<void> {
   const sessionLimit = parseSessionLimit(sessionLimitRaw);
   if (sessionLimit !== undefined) body.maxSessions = sessionLimit;
 
-  const signer = await loadSigner(flags);
-  const cc = new RelayClient({ relayBaseUrl: cliRelayBaseUrl(flags), signer });
-  const out = await cc.createChannel(body);
+  const signer = await requireVellumIdentity({
+    keyPath: agentIdentityPath(flags),
+    identitySecret: resolveIdentitySecret(),
+  });
+  const out = await createVellumChannel({
+    relayBaseUrl: cliRelayBaseUrl(flags),
+    signer,
+    ...body,
+  });
   console.log(JSON.stringify(out, null, 2));
 }
 
 export async function handleChannelJoin(ctx: VellumCliContext, flags: FlagMap): Promise<void> {
   const inviteToken = await promptInviteTokenIfMissing(ctx, flags);
-  const signer = await loadSigner(flags);
-  const cc = new RelayClient({ relayBaseUrl: cliRelayBaseUrl(flags), signer });
-  const out = await cc.joinChannel({ inviteToken });
+  const signer = await requireVellumIdentity({
+    keyPath: agentIdentityPath(flags),
+    identitySecret: resolveIdentitySecret(),
+  });
+  const out = await joinVellumChannel({
+    relayBaseUrl: cliRelayBaseUrl(flags),
+    signer,
+    inviteToken,
+  });
   console.log(JSON.stringify(out, null, 2));
 }
 
@@ -95,7 +108,7 @@ export async function handleChannelAttach(
 
   const channelFromPositional = positional[2]?.trim();
   const knownChannelId = resolveChannelId(flags, channelFromPositional);
-  const inviteFromFlag = strFlag(flags, "invite-token") ?? strFlag(flags, "inviteToken");
+  const inviteFromFlag = strFlag(flags, "invite-token");
   if (
     inviteFromFlag !== undefined &&
     inviteFromFlag.trim().length > 0 &&
@@ -109,9 +122,15 @@ export async function handleChannelAttach(
   });
 
   if (inviteToken !== undefined) {
-    const signer = await loadSigner(flags);
-    const cc = new RelayClient({ relayBaseUrl: cliRelayBaseUrl(flags), signer });
-    const joinOut = await cc.joinChannel({ inviteToken });
+    const signer = await requireVellumIdentity({
+      keyPath: agentIdentityPath(flags),
+      identitySecret: resolveIdentitySecret(),
+    });
+    const joinOut = await joinVellumChannel({
+      relayBaseUrl: cliRelayBaseUrl(flags),
+      signer,
+      inviteToken,
+    });
     const result = await connectChannel(flags, joinOut.channelId, {
       webSocketUrl: joinOut.webSocketUrl,
       upgradeNonce: joinOut.upgradeNonce,
@@ -124,7 +143,7 @@ export async function handleChannelAttach(
 }
 
 async function handleChannelAttachAll(flags: FlagMap): Promise<void> {
-  const invite = strFlag(flags, "invite-token") ?? strFlag(flags, "inviteToken");
+  const invite = strFlag(flags, "invite-token");
   if (invite !== undefined && invite.trim().length > 0) {
     throw new Error("channel attach --all cannot be combined with --invite-token");
   }

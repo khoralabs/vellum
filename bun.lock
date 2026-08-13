@@ -22,9 +22,7 @@
         "@khoralabs/cli-kit": "workspace:*",
         "@khoralabs/did-key-identity": "^0.1.0",
         "@khoralabs/obp-nbc": "^0.1.0",
-        "@khoralabs/relay": "^0.1.1",
         "@khoralabs/vellum-client": "workspace:*",
-        "@khoralabs/vellum-contracts": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -39,12 +37,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@khoralabs/did-key-identity": "^0.1.0",
-        "@khoralabs/obp-core": "^0.1.0",
-        "@khoralabs/obp-nbc": "^0.1.0",
-        "@khoralabs/obp-wire": "^0.1.0",
-        "@khoralabs/relay": "^0.1.1",
         "@khoralabs/vellum-client": "workspace:*",
-        "@khoralabs/vellum-contracts": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -61,40 +54,14 @@
         "@khoralabs/did-key-identity": "^0.1.0",
         "@khoralabs/obp-core": "^0.1.0",
         "@khoralabs/obp-nbc": "^0.1.0",
+        "@khoralabs/obp-wire": "^0.1.0",
         "@khoralabs/relay": "^0.1.1",
-        "@khoralabs/vellum-contracts": "workspace:*",
-        "@khoralabs/vellum-transport": "workspace:*",
         "better-sqlite3": "^11.10.0",
         "zod": "^4",
       },
       "devDependencies": {
         "@microsoft/api-extractor": "^7.58.9",
         "@types/better-sqlite3": "^7.6.13",
-        "@types/bun": "latest",
-        "typescript": "^5",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "packages/contracts": {
-      "name": "@khoralabs/vellum-contracts",
-      "version": "0.0.0",
-      "dependencies": {
-        "zod": "^4",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "typescript": "^5",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "packages/transport": {
-      "name": "@khoralabs/vellum-transport",
-      "version": "0.0.0",
-      "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5",
       },
@@ -271,11 +238,7 @@
 
     "@khoralabs/vellum-client": ["@khoralabs/vellum-client@workspace:packages/client"],
 
-    "@khoralabs/vellum-contracts": ["@khoralabs/vellum-contracts@workspace:packages/contracts"],
-
     "@khoralabs/vellum-daemon": ["@khoralabs/vellum-daemon@workspace:apps/daemon"],
-
-    "@khoralabs/vellum-transport": ["@khoralabs/vellum-transport@workspace:packages/transport"],
 
     "@mdx-js/mdx": ["@mdx-js/mdx@3.1.1", "", { "dependencies": { "@types/estree": "^1.0.0", "@types/estree-jsx": "^1.0.0", "@types/hast": "^3.0.0", "@types/mdx": "^2.0.0", "acorn": "^8.0.0", "collapse-white-space": "^2.0.0", "devlop": "^1.0.0", "estree-util-is-identifier-name": "^3.0.0", "estree-util-scope": "^1.0.0", "estree-walker": "^3.0.0", "hast-util-to-jsx-runtime": "^2.0.0", "markdown-extensions": "^2.0.0", "recma-build-jsx": "^1.0.0", "recma-jsx": "^1.0.0", "recma-stringify": "^1.0.0", "rehype-recma": "^1.0.0", "remark-mdx": "^3.0.0", "remark-parse": "^11.0.0", "remark-rehype": "^11.0.0", "source-map": "^0.7.0", "unified": "^11.0.0", "unist-util-position-from-estree": "^2.0.0", "unist-util-stringify-position": "^4.0.0", "unist-util-visit": "^5.0.0", "vfile": "^6.0.0" } }, "sha512-f6ZO2ifpwAQIpzGWaBQT2TXxPv6z3RBzQKpVftEWN78Vl/YweF1uwussDx8ECAXVtr3Rs89fKyG9YlzUs9DyGQ=="],
 

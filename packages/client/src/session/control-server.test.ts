@@ -6,18 +6,23 @@ import type {
   FrameSessionHandle,
   SessionInitNormalized,
 } from "@khoralabs/obp-wire";
-import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "@khoralabs/vellum-contracts";
-
+import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "../contracts";
+import { createVellumMetaPersistence } from "../persistence/sqlite/meta-persistence";
 import { startVellumControlServer } from "./control-server";
 import { testControlSigner } from "./test-signer";
-import { ensureVellumMetaSchema, upsertRosterEntry } from "./vellum-sqlite-meta";
 
 const testSigner = testControlSigner("did:key:alice");
-const testServerOpts = {
-  signer: testSigner,
-  myActorPubkeyHex: "ee".repeat(32),
-  persistence: createInMemoryObpPersistenceClient(),
-};
+
+function mkOpts(db: Database) {
+  const meta = createVellumMetaPersistence(db);
+  meta.ensureSchema();
+  return {
+    meta,
+    signer: testSigner,
+    myActorPubkeyHex: "ee".repeat(32),
+    persistence: createInMemoryObpPersistenceClient(),
+  };
+}
 
 function mkConn(opts: { turns: unknown[] }): FrameMultiplexOpenerApi {
   return {
@@ -44,10 +49,9 @@ function mkConn(opts: { turns: unknown[] }): FrameMultiplexOpenerApi {
 describe("POST /chain/init genesis_turn", () => {
   test("400 when genesis_turn missing (schema)", async () => {
     const db = new Database(":memory:");
-    ensureVellumMetaSchema(db);
     const turns: unknown[] = [];
     const state = { conn: mkConn({ turns }), handles: new Map() };
-    const server = startVellumControlServer({ state, db, ...testServerOpts });
+    const server = startVellumControlServer({ state, db, ...mkOpts(db) });
     try {
       const sampleInit = ChainInitWireSchema.parse({
         session_id: "s1",
@@ -70,10 +74,9 @@ describe("POST /chain/init genesis_turn", () => {
 
   test("400 when genesis ports empty", async () => {
     const db = new Database(":memory:");
-    ensureVellumMetaSchema(db);
     const turns: unknown[] = [];
     const state = { conn: mkConn({ turns }), handles: new Map() };
-    const server = startVellumControlServer({ state, db, ...testServerOpts });
+    const server = startVellumControlServer({ state, db, ...mkOpts(db) });
     try {
       const sampleInit = ChainInitWireSchema.parse({
         session_id: "s2",
@@ -104,10 +107,9 @@ describe("POST /chain/init genesis_turn", () => {
 
   test("400 when genesis bind_port_id set", async () => {
     const db = new Database(":memory:");
-    ensureVellumMetaSchema(db);
     const turns: unknown[] = [];
     const state = { conn: mkConn({ turns }), handles: new Map() };
-    const server = startVellumControlServer({ state, db, ...testServerOpts });
+    const server = startVellumControlServer({ state, db, ...mkOpts(db) });
     try {
       const sampleInit = ChainInitWireSchema.parse({
         session_id: "s3",
@@ -136,11 +138,11 @@ describe("POST /chain/init genesis_turn", () => {
 
   test("init then sendTurn with default genesis shape", async () => {
     const db = new Database(":memory:");
-    ensureVellumMetaSchema(db);
-    upsertRosterEntry(db, "did:key:bob", "ff".repeat(32), Date.now());
+    const opts = mkOpts(db);
+    opts.meta.upsertRosterEntry("did:key:bob", "ff".repeat(32), Date.now());
     const turns: unknown[] = [];
     const state = { conn: mkConn({ turns }), handles: new Map() };
-    const server = startVellumControlServer({ state, db, ...testServerOpts });
+    const server = startVellumControlServer({ state, db, ...opts });
     try {
       const sampleInit = ChainInitWireSchema.parse({
         session_id: "s4",

@@ -1,7 +1,7 @@
 {
   "name": "@khoralabs/vellum-daemon",
   "version": "0.0.0",
-  "description": "Vellum NBC channel daemon: WebSocket multiplex, SQLite graph, HTTP control.",
+  "description": "Vellum NBC channel daemon process entry (session runtime in @khoralabs/vellum-client).",
   "type": "module",
   "private": true,
   "exports": {
@@ -18,12 +18,7 @@
   },
   "dependencies": {
     "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "^0.1.0",
-    "@khoralabs/obp-nbc": "^0.1.0",
-    "@khoralabs/obp-wire": "^0.1.0",
-    "@khoralabs/relay": "^0.1.1",
-    "@khoralabs/vellum-client": "workspace:*",
-    "@khoralabs/vellum-contracts": "workspace:*"
+    "@khoralabs/vellum-client": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

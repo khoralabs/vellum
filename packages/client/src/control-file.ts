@@ -1,11 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  cfgDataDir,
-  channelVellumControlPath,
-  type VellumPathConfig,
-} from "@khoralabs/vellum-contracts";
+import { cfgDataDir, channelVellumControlPath, type VellumPathConfig } from "./contracts";
 
 export type VellumControlFile = {
   pid: number;
@@ -41,7 +37,7 @@ export function removeVellumControlFile(cfg: VellumPathConfig, channelId: string
   }
 }
 
-/** Read `{ pid, controlPort, channelId }` written by daemon. */
+/** Read `{ pid, controlPort, channelId }` written by the session runner. */
 export function readVellumControlFile(
   cfg: VellumPathConfig,
   channelId: string,

@@ -1,6 +1,6 @@
 # Vellum channel control protocol
 
-Normative description of the **HTTP control plane** for Vellum channels. Wire bindings live in [`@khoralabs/vellum-contracts`](../contracts/src/channels.ts) (Zod). Event ordering is summarized in [`.brain/technical/channel-lifecycle.md`](../../.brain/technical/channel-lifecycle.md).
+Normative description of the **HTTP control plane** for Vellum channels. Wire bindings live in [`@khoralabs/vellum-client`](../client/src/contracts/) (Zod). Event ordering is summarized in [`.brain/technical/channel-lifecycle.md`](../../.brain/technical/channel-lifecycle.md).
 
 This spec covers **one multiplex per `channel_id`**. Each channel is a single nonce-gated byte stream, not a meta-hub of sub-channels.
 

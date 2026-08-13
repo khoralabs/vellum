@@ -12,7 +12,7 @@ export async function promptInviteTokenIfMissing(
   ctx: VellumCliContext,
   flags: FlagMap,
 ): Promise<string> {
-  const fromFlag = strFlag(flags, "invite-token") ?? strFlag(flags, "inviteToken");
+  const fromFlag = strFlag(flags, "invite-token");
   const seed = fromFlag !== undefined && fromFlag.trim().length > 0 ? fromFlag.trim() : undefined;
   const row = await runFlow({
     readLine: ctx.readLine,

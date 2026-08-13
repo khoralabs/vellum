@@ -14,12 +14,18 @@ const PKG_DIR: Record<VellumLibPackage, string> = {
 };
 
 export function stagedClientExports(): Record<string, unknown> {
+  const entry = (base: string) => ({
+    types: `./dist/${base}.d.ts`,
+    import: `./dist/${base}.js`,
+    default: `./dist/${base}.js`,
+  });
   return {
-    ".": {
-      types: "./dist/index.d.ts",
-      import: "./dist/index.js",
-      default: "./dist/index.js",
-    },
+    ".": entry("index"),
+    "./contracts": entry("contracts/index"),
+    "./transport": entry("transport/index"),
+    "./session": entry("session/index"),
+    "./persistence": entry("persistence/core/index"),
+    "./sqlite": entry("persistence/sqlite/index"),
     "./vellum-config.schema.json": "./vellum-config.schema.json",
   };
 }

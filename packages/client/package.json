@@ -27,12 +27,44 @@
     "README.md",
     "LICENSE"
   ],
-  "module": "src/index.ts",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "bun": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./contracts": {
+      "bun": "./src/contracts/index.ts",
+      "types": "./dist/contracts/index.d.ts",
+      "import": "./dist/contracts/index.js",
+      "default": "./dist/contracts/index.js"
+    },
+    "./transport": {
+      "bun": "./src/transport/index.ts",
+      "types": "./dist/transport/index.d.ts",
+      "import": "./dist/transport/index.js",
+      "default": "./dist/transport/index.js"
+    },
+    "./session": {
+      "bun": "./src/session/index.ts",
+      "types": "./dist/session/index.d.ts",
+      "import": "./dist/session/index.js",
+      "default": "./dist/session/index.js"
+    },
+    "./persistence": {
+      "bun": "./src/persistence/core/index.ts",
+      "types": "./dist/persistence/core/index.d.ts",
+      "import": "./dist/persistence/core/index.js",
+      "default": "./dist/persistence/core/index.js"
+    },
+    "./sqlite": {
+      "bun": "./src/persistence/sqlite/index.ts",
+      "types": "./dist/persistence/sqlite/index.d.ts",
+      "import": "./dist/persistence/sqlite/index.js",
+      "default": "./dist/persistence/sqlite/index.js"
     },
     "./vellum-config.schema.json": "./vellum-config.schema.json"
   },
@@ -47,8 +79,7 @@
     "@khoralabs/did-key-identity": "^0.1.0",
     "@khoralabs/obp-core": "^0.1.0",
     "@khoralabs/obp-nbc": "^0.1.0",
-    "@khoralabs/vellum-contracts": "workspace:*",
-    "@khoralabs/vellum-transport": "workspace:*",
+    "@khoralabs/obp-wire": "^0.1.0",
     "better-sqlite3": "^11.10.0",
     "zod": "^4"
   },

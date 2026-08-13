@@ -15,7 +15,7 @@
     "submodules:update": "git submodule update --remote --merge vendor/libs && bun install",
     "submodules:update:libs": "git submodule update --remote --merge vendor/libs && bun install",
     "prepare": "husky",
-    "agent-review": "agent-review",
+    "review": "agent-review",
     "review": "agent-review run --scope staged --include-workstream"
   },
   "devDependencies": {

@@ -2,7 +2,6 @@ import type z from "zod";
 import { VellumConfigError } from "./errors";
 import { readVellumConfigFileWithExtends } from "./file";
 import { mergeVellumAppConfigLayers } from "./merge";
-import { normalizeVellumAppConfigRaw } from "./normalize";
 
 export type LoadVellumAppConfigOptions<TSchema extends z.ZodTypeAny> = {
   schema: TSchema;
@@ -37,7 +36,7 @@ export function loadVellumAppConfig<TSchema extends z.ZodTypeAny>(
   }
   const allLayers: unknown[] = [...(opts.layers ?? [])];
   if (fileMerged !== undefined) allLayers.push(fileMerged);
-  const merged = normalizeVellumAppConfigRaw(mergeVellumAppConfigLayers(allLayers));
+  const merged = mergeVellumAppConfigLayers(allLayers);
   const result = opts.schema.safeParse(merged);
   if (!result.success) {
     throw new VellumConfigError(result.error.issues, sourcePath);

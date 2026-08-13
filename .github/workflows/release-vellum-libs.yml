@@ -64,7 +64,7 @@ jobs:
 
       - name: test
         run: |
-          bun test packages/contracts packages/client scripts/stage-vellum-libs-release.test.ts
+          bun test packages/client scripts/stage-vellum-libs-release.test.ts
 
       - name: build client schema
         run: bun run --cwd packages/client build:schema

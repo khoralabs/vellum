@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import type { VellumChainRow, VellumOfferRow, VellumPortRow } from "@khoralabs/vellum-contracts";
 import Database from "better-sqlite3";
+import type { VellumChainRow, VellumOfferRow, VellumPortRow } from "../contracts";
 
 import type { VellumReadModel } from "./vellum-read-persistence";
 

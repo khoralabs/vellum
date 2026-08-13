@@ -1,21 +1,22 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-core/persistence";
-import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "@khoralabs/vellum-contracts";
-
+import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "../contracts";
+import { createVellumMetaPersistence } from "../persistence/sqlite/meta-persistence";
 import { startVellumControlServer } from "./control-server";
 import { testControlSigner } from "./test-signer";
-import { ensureVellumMetaSchema } from "./vellum-sqlite-meta";
 
 test("chain/init rejects without relay allocation when check enabled", async () => {
   const db = new Database(":memory:");
-  ensureVellumMetaSchema(db);
+  const meta = createVellumMetaPersistence(db);
+  meta.ensureSchema();
   const allocated = new Set<string>();
   const signer = testControlSigner("did:key:alice");
 
   const server = startVellumControlServer({
     state: { conn: undefined, handles: new Map() },
     db,
+    meta,
     persistence: createInMemoryObpPersistenceClient(),
     signer,
     myActorPubkeyHex: "bb".repeat(32),

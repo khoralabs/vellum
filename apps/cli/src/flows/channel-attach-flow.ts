@@ -11,7 +11,7 @@ export async function resolveAttachInviteToken(
   flags: FlagMap,
   opts?: { promptIfMissing?: boolean },
 ): Promise<string | undefined> {
-  const fromFlag = strFlag(flags, "invite-token") ?? strFlag(flags, "inviteToken");
+  const fromFlag = strFlag(flags, "invite-token");
   if (fromFlag !== undefined && fromFlag.trim().length > 0) return fromFlag.trim();
 
   if (opts?.promptIfMissing !== true) return undefined;

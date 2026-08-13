@@ -16,11 +16,11 @@ function clientForChannelCommands(flags: FlagMap): VellumClient {
 
 export async function handleChainCreate(flags: FlagMap): Promise<void> {
   const client = clientForChannelCommands(flags);
-  const peerDid = strFlag(flags, "peer-did") ?? strFlag(flags, "peerDid");
+  const peerDid = strFlag(flags, "peer-did");
   if (peerDid === undefined) {
     throw new Error("chain create requires --peer-did");
   }
-  const genesisJson = strFlag(flags, "genesis-json") ?? strFlag(flags, "genesisJson");
+  const genesisJson = strFlag(flags, "genesis-json");
   let genesisTurn: Record<string, unknown> | undefined;
   if (genesisJson !== undefined && genesisJson.length > 0) {
     const parsed = readJsonArg(genesisJson);

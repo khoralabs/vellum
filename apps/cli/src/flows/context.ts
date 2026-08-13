@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import { createReadlineSession, type FlagMap, type ReadLineFn, strFlag } from "@khoralabs/cli-kit";
-import { loadIdentity, type PersistableSigner } from "@khoralabs/did-key-identity";
-import { defaultAgentIdentityPath, VellumClient } from "@khoralabs/vellum-client";
+import type { IdentitySecret, PersistableSigner } from "@khoralabs/did-key-identity";
+import {
+  defaultAgentIdentityPath,
+  requireVellumIdentity,
+  VellumClient,
+} from "@khoralabs/vellum-client";
 
 import { vellumCliResolvedConfig } from "../vellum-app-config";
 
@@ -26,12 +30,7 @@ export function readJsonArg(pathOrInline: string): unknown {
 
 export function cliRelayBaseUrl(flags: FlagMap): string {
   const cfg = vellumCliResolvedConfig(flags);
-  const relay =
-    strFlag(flags, "base-url") ??
-    strFlag(flags, "baseUrl") ??
-    strFlag(flags, "relay-base-url") ??
-    strFlag(flags, "relayBaseUrl") ??
-    cfg.relayBaseUrl;
+  const relay = strFlag(flags, "base-url") ?? cfg.relayBaseUrl;
   if (relay === undefined || relay.trim().length === 0) {
     throw new Error("VELLUM_BASE_URL or --base-url is required (Vellum channel-relay HTTP origin)");
   }
@@ -48,7 +47,7 @@ export function agentIdentityPath(flags: FlagMap): string {
 
 export function dataDirForEnv(flags: FlagMap): string | undefined {
   const cfg = vellumCliResolvedConfig(flags);
-  const d = strFlag(flags, "data-dir") ?? strFlag(flags, "dataDir") ?? cfg.dataDir;
+  const d = strFlag(flags, "data-dir") ?? cfg.dataDir;
   const t = d?.trim();
   return t !== undefined && t.length > 0 ? t : undefined;
 }
@@ -62,19 +61,38 @@ export function resolveChannelId(flags: FlagMap, channelPositional?: string | un
   return "";
 }
 
+/** Resolve wrap-key / passphrase from env for sealed identities. */
+export function resolveIdentitySecret(): IdentitySecret | undefined {
+  const wrap = process.env.VELLUM_IDENTITY_WRAP_KEY?.trim();
+  if (wrap !== undefined && wrap.length > 0) {
+    const key = /^[0-9a-fA-F]{64}$/.test(wrap)
+      ? Buffer.from(wrap, "hex")
+      : Buffer.from(wrap, "base64");
+    if (key.byteLength !== 32) {
+      throw new Error("VELLUM_IDENTITY_WRAP_KEY must decode to 32 bytes");
+    }
+    return { type: "wrapKey", key: new Uint8Array(key) };
+  }
+  const pass = process.env.VELLUM_IDENTITY_PASSPHRASE?.trim();
+  if (pass !== undefined && pass.length > 0) {
+    return { type: "passphrase", passphrase: pass };
+  }
+  return undefined;
+}
+
 export function makeVellumClient(flags: FlagMap, channelId: string): VellumClient {
   return new VellumClient({
     relayBaseUrl: cliRelayBaseUrl(flags),
     channelId,
     dataDir: dataDirForEnv(flags),
+    keyPath: agentIdentityPath(flags),
+    identitySecret: resolveIdentitySecret(),
   });
 }
 
 export async function loadSigner(flags: FlagMap): Promise<PersistableSigner> {
-  const idPath = agentIdentityPath(flags);
-  const signer = await loadIdentity(idPath);
-  if (signer === undefined) {
-    throw new Error(`identity not found at ${idPath}`);
-  }
-  return signer;
+  return requireVellumIdentity({
+    keyPath: agentIdentityPath(flags),
+    identitySecret: resolveIdentitySecret(),
+  });
 }

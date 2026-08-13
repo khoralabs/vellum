@@ -5,7 +5,7 @@ import { CHANNEL_ID_RESOLUTION_HELP } from "./channel-id";
 export const channelCreateHelp: CommandHelp = {
   command: "channel create",
   summary: "Create a Vellum channel on the channel-relay",
-  args: `vellum channel create [--ttl-ms=<n>] [--max-population=<n>] [--chain-limit=global:N|principal:N] [--base-url=…]
+  args: `vellum channel create [--ttl-ms=<n>] [--max-population=<n>] [--session-limit=global:N|principal:N] [--base-url=…]
 
 Does not require a channel id (creates a new one).`,
 };

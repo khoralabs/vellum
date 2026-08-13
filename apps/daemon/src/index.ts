@@ -1,18 +1,18 @@
 #!/usr/bin/env bun
 import { existsSync } from "node:fs";
 
-import { loadIdentity, type PersistableSigner } from "@khoralabs/did-key-identity";
+import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import {
-  defaultAgentIdentityPath,
   defaultVellumDaemonConfigPath,
   loadVellumAppConfig,
+  requireVellumIdentity,
+  resolveVellumIdentityPath,
+  type VellumPathConfig,
   vellumAppConfigBuiltinDefaults,
   vellumAppConfigFromEnv,
   zVellumAppConfigBase,
 } from "@khoralabs/vellum-client";
-import type { VellumPathConfig } from "@khoralabs/vellum-contracts";
-
-import { runVellumDaemon } from "./run-vellum-daemon";
+import { runVellumSession } from "@khoralabs/vellum-client/session";
 
 function daemonJsonOutput(vcfg: { daemonJson?: boolean }): boolean {
   return (
@@ -40,17 +40,43 @@ function loadDaemonLayeredConfig() {
   }).config;
 }
 
+function resolveIdentitySecretFromEnv():
+  | { type: "wrapKey"; key: Uint8Array }
+  | { type: "passphrase"; passphrase: string }
+  | undefined {
+  const wrap = process.env.VELLUM_IDENTITY_WRAP_KEY?.trim();
+  if (wrap !== undefined && wrap.length > 0) {
+    const key = /^[0-9a-fA-F]{64}$/.test(wrap)
+      ? Buffer.from(wrap, "hex")
+      : Buffer.from(wrap, "base64");
+    if (key.byteLength !== 32) {
+      console.error("VELLUM_IDENTITY_WRAP_KEY must decode to 32 bytes");
+      process.exit(1);
+    }
+    return { type: "wrapKey", key: new Uint8Array(key) };
+  }
+  const pass = process.env.VELLUM_IDENTITY_PASSPHRASE?.trim();
+  if (pass !== undefined && pass.length > 0) {
+    return { type: "passphrase", passphrase: pass };
+  }
+  return undefined;
+}
+
 async function loadSigner(vcfg: { agentKeyPath?: string }): Promise<PersistableSigner> {
-  const p =
+  const keyPath =
     process.env.VELLUM_AGENT_KEY_PATH?.trim() ??
     vcfg.agentKeyPath?.trim() ??
-    defaultAgentIdentityPath();
-  const signer = await loadIdentity(p);
-  if (signer === undefined) {
-    console.error(`No agent identity at ${p}. Generate an Ed25519 identity first.`);
+    resolveVellumIdentityPath();
+  try {
+    return await requireVellumIdentity({
+      keyPath,
+      identitySecret: resolveIdentitySecretFromEnv(),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(msg);
     process.exit(1);
   }
-  return signer;
 }
 
 const vcfg = loadDaemonLayeredConfig();
@@ -60,6 +86,7 @@ const channelId = process.env.VELLUM_CHANNEL_ID?.trim() ?? "";
 const webSocketUrl =
   process.env.VELLUM_CHANNEL_WS_URL?.trim() ?? vcfg.defaultChannelWebSocketUrl?.trim() ?? "";
 const relayBaseUrl = process.env.VELLUM_BASE_URL?.trim() ?? vcfg.relayBaseUrl?.trim() ?? "";
+const webSocketNonce = process.env.VELLUM_CHANNEL_WS_NONCE?.trim();
 
 if (channelId.length === 0) {
   console.error(
@@ -84,20 +111,25 @@ const lastBlobId =
   lastBlobRaw !== undefined && lastBlobRaw.length > 0
     ? Number.parseInt(lastBlobRaw, 10)
     : undefined;
-const handle = runVellumDaemon({
+const handle = runVellumSession({
   relayBaseUrl,
   signer,
   channelId,
   webSocketUrl,
+  ...(webSocketNonce !== undefined && webSocketNonce.length > 0 ? { webSocketNonce } : {}),
   ...(lastBlobId !== undefined && Number.isFinite(lastBlobId) ? { lastBlobId } : {}),
   json,
   cfg: daemonPathConfig(vcfg),
+  onFatal: () => process.exit(1),
+});
+
+handle.ready.catch((e) => {
+  console.error(e instanceof Error ? e.message : String(e));
+  process.exit(1);
 });
 
 function shutdown(): void {
   handle.close();
-  // Let the async cleanup (stopAutoReplenish, db.close, etc.) run before exit.
-  // The process exits naturally once the event loop drains.
 }
 
 process.on("SIGINT", shutdown);
