@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-13
+
 ### Added
 
 - `@khoralabs/vellum-client/pool` — `VellumPool` for Khora-shaped in-process channel attachments (`bind` / `unbind` / `list` / `subscribe` / `handle` / `close` demux by `did` + `channelId`).
@@ -39,5 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Workspace packages `@khoralabs/vellum-contracts` and `@khoralabs/vellum-transport`.
 - Legacy config/CLI aliases (e.g. camelCase flag aliases, `baseUrl` → `relayBaseUrl` mapping, deprecated `runVellumDaemon` alias).
 
-[unreleased]: https://github.com/khoralabs/vellum/compare/vellum-client-v0.1.0...HEAD
+## [0.1.0] - 2026-07-15
+
+### Added
+
+- Initial `@khoralabs/vellum-client` release (daemon control POST + SQLite reads).
+
+[unreleased]: https://github.com/khoralabs/vellum/compare/vellum-client-v0.2.0...HEAD
+[0.2.0]: https://github.com/khoralabs/vellum/compare/vellum-client-v0.1.0...vellum-client-v0.2.0
 [0.1.0]: https://github.com/khoralabs/vellum/releases/tag/vellum-client-v0.1.0
