@@ -4,7 +4,7 @@ import {
   type OpenVellumAttachmentOptions,
   openVellumAttachment,
   type VellumAttachmentHandle,
-} from "../session/open-vellum-attachment";
+} from "../session";
 import { VellumClient } from "../vellum-client";
 
 export type VellumPoolAttachmentRef = {

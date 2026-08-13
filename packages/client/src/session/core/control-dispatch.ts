@@ -1,20 +1,12 @@
-import type { Database } from "bun:sqlite";
-import type { PersistableSigner } from "@khoralabs/did-key-identity";
-import type { ObpPersistenceClient } from "@khoralabs/obp-core/persistence";
 import { type NbcTurnBody, parseNbcTurnBody } from "@khoralabs/obp-nbc";
-import {
-  type FrameMultiplexOpenerApi,
-  type FrameSessionHandle,
-  normalizeSessionInit,
-  sessionInitFromWire,
-} from "@khoralabs/obp-wire";
+import { normalizeSessionInit, sessionInitFromWire } from "@khoralabs/obp-wire";
 import {
   ChainInitRequestSchema,
   type ChainInitResponse,
   type ChainStateResponse,
   TurnRequestSchema,
-} from "../contracts";
-import type { VellumPersistence } from "../persistence/core/types";
+} from "../../contracts";
+import type { CreateVellumControlDispatchOptions, VellumControlDispatch } from "./types";
 
 function parseGenesisTurnOrThrow(raw: Record<string, unknown>) {
   const nb = parseNbcTurnBody(raw);
@@ -27,28 +19,6 @@ function parseGenesisTurnOrThrow(raw: Record<string, unknown>) {
   return nb;
 }
 
-export type VellumControlServerState = {
-  /** Set when multiplex connection is ready — `conn.init` / `sendTurn` require this. */
-  conn: FrameMultiplexOpenerApi | undefined;
-  /** Per `session_id`, `FrameSessionHandle.sendTurn` bridge. */
-  handles: Map<string, FrameSessionHandle>;
-};
-
-export type VellumControlDispatch = (req: Request) => Promise<Response>;
-
-export type CreateVellumControlDispatchOptions = {
-  state: VellumControlServerState;
-  /** OBP sqlite for graph summary counts only (not vellum_* meta). */
-  db: Database;
-  /** Vellum bookkeeping + graph reads (named `meta` to avoid clashing with OBP `persistence`). */
-  meta: VellumPersistence;
-  persistence: ObpPersistenceClient;
-  signer: PersistableSigner;
-  myActorPubkeyHex: string;
-  /** When set, chain/init requires a prior relay allocation for session_id. */
-  isSessionAllocated?: (sessionId: string) => boolean | Promise<boolean>;
-};
-
 function serialize<T>(mut: { tail: Promise<void> }, run: () => Promise<T>): Promise<T> {
   const p = mut.tail.then(run);
   mut.tail = p.then(
@@ -58,7 +28,7 @@ function serialize<T>(mut: { tail: Promise<void> }, run: () => Promise<T>): Prom
   return p;
 }
 
-function obpTableCount(db: Database, table: string): number {
+function obpTableCount(db: CreateVellumControlDispatchOptions["db"], table: string): number {
   const row = db.query<{ c: number }, []>(`SELECT COUNT(*) AS c FROM ${table}`).get();
   return row?.c ?? 0;
 }
@@ -192,28 +162,5 @@ export function createVellumControlDispatch(
     }
 
     return Response.json({ error: "not found" }, { status: 404 });
-  };
-}
-
-export function startVellumControlServer(opts: CreateVellumControlDispatchOptions): {
-  hostname: string;
-  port: number;
-  dispatch: VellumControlDispatch;
-  stop(): void;
-} {
-  const dispatch = createVellumControlDispatch(opts);
-  const server = Bun.serve({
-    port: 0,
-    hostname: "127.0.0.1",
-    fetch: dispatch,
-  });
-
-  return {
-    hostname: server.hostname ?? "127.0.0.1",
-    port: Number(server.port ?? 0),
-    dispatch,
-    stop: () => {
-      server.stop();
-    },
   };
 }

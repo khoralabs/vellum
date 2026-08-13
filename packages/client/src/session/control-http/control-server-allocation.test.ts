@@ -1,10 +1,10 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-core/persistence";
-import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "../contracts";
-import { createVellumPersistence } from "../persistence/sqlite/vellum-persistence";
-import { startVellumControlServer } from "./control-server";
-import { testControlSigner } from "./test-signer";
+import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "../../contracts";
+import { createVellumPersistence } from "../../persistence/sqlite/vellum-persistence";
+import { testControlSigner } from "../testing/test-signer";
+import { startVellumControlServer } from "./server";
 
 test("chain/init rejects without relay allocation when check enabled", async () => {
   const db = new Database(":memory:");

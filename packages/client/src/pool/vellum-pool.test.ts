@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
-import type { VellumAttachmentHandle } from "../session/open-vellum-attachment";
+import type { VellumAttachmentHandle } from "../session";
 import type { VellumControlTransport } from "../transport";
 import { VellumPool, type VellumPoolEvent } from "./vellum-pool";
 

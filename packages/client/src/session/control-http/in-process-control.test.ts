@@ -1,10 +1,10 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
 import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-core/persistence";
-import { createVellumPersistence } from "../persistence/sqlite/vellum-persistence";
-import { InProcessControlTransport } from "../transport";
-import { createVellumControlDispatch, type VellumControlServerState } from "./control-server";
-import { testControlSigner } from "./test-signer";
+import { createVellumPersistence } from "../../persistence/sqlite/vellum-persistence";
+import { InProcessControlTransport } from "../../transport";
+import { createVellumControlDispatch, type VellumControlServerState } from "../core";
+import { testControlSigner } from "../testing/test-signer";
 
 describe("InProcessControlTransport", () => {
   test("dispatches /health without Bun.serve", async () => {

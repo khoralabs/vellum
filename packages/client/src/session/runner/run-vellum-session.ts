@@ -11,17 +11,18 @@ import { RelayClient } from "@khoralabs/relay/client";
 import { relayWsUpgradeProtocol } from "@khoralabs/relay/contracts";
 import { base64UrlToBytes } from "@khoralabs/relay/crypto";
 import { fetchMlsWelcomeHttp, MlsGroupSession } from "@khoralabs/relay/mls";
-import { cfgDataDir, channelSqlitePath, type VellumPathConfig } from "../contracts";
+import { cfgDataDir, channelSqlitePath, type VellumPathConfig } from "../../contracts";
 import {
   readVellumControlFile,
   removeVellumControlFile,
   writeVellumControlFile,
-} from "../control-file";
-import type { VellumPersistence } from "../persistence/core/types";
-import { createVellumPersistence } from "../persistence/sqlite/vellum-persistence";
-import { InProcessControlTransport, type VellumControlTransport } from "../transport";
-import { startVellumControlServer, type VellumControlServerState } from "./control-server";
-import { connectObpOverRelay } from "./relay-obp-adapter";
+} from "../../control-file";
+import type { VellumPersistence } from "../../persistence/core/types";
+import { createVellumPersistence } from "../../persistence/sqlite/vellum-persistence";
+import { InProcessControlTransport, type VellumControlTransport } from "../../transport";
+import { startVellumControlServer } from "../control-http";
+import type { VellumControlServerState } from "../core";
+import { connectObpOverRelay } from "../relay";
 
 export type RunVellumSessionOptions = {
   relayBaseUrl: string;

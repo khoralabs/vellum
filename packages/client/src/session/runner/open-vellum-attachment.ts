@@ -1,8 +1,8 @@
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import { RelayClient } from "@khoralabs/relay/client";
-import type { VellumPathConfig } from "../contracts";
-import type { VellumPersistence } from "../persistence/core/types";
-import type { VellumControlTransport } from "../transport";
+import type { VellumPathConfig } from "../../contracts";
+import type { VellumPersistence } from "../../persistence/core/types";
+import type { VellumControlTransport } from "../../transport";
 import { runVellumSession, type VellumSessionHandle } from "./run-vellum-session";
 
 export type OpenVellumAttachmentOptions = {
