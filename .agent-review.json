@@ -1,0 +1,15 @@
+{
+  "model": {
+    "review": "google/gemini-3.6-flash",
+    "analyze": "google/gemini-3.6-flash",
+    "commitMessage": "deepseek/deepseek-v4-flash-0731"
+  },
+  "skillsDirs": [".agents/skills"],
+  "blockOn": ["error"],
+  "maxDiffBytes": 200000,
+  "defaultScope": "staged",
+  "outputDir": ".data/agent-review",
+  "analystConcurrency": 4,
+  "includeWorkstream": false,
+  "skip": false
+}

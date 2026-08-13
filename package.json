@@ -14,10 +14,13 @@
     "submodules:init": "git submodule update --init --recursive",
     "submodules:update": "git submodule update --remote --merge vendor/libs && bun install",
     "submodules:update:libs": "git submodule update --remote --merge vendor/libs && bun install",
-    "prepare": "husky"
+    "prepare": "husky",
+    "agent-review": "agent-review",
+    "review": "agent-review run --scope staged --include-workstream"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
+    "@khoralabs/agent-review": "0.1.1",
     "@types/bun": "latest",
     "husky": "^9.1.7",
     "typescript": "^5"
