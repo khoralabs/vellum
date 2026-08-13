@@ -10,7 +10,7 @@
   "scripts": {
     "format": "biome check --write .",
     "format:check": "biome check .",
-    "typecheck": "bun run --filter '@khoralabs/vellum-*' typecheck",
+    "typecheck": "rm -rf packages/client/dist && bun run --filter '@khoralabs/vellum-*' typecheck",
     "submodules:init": "git submodule update --init --recursive",
     "submodules:update": "git submodule update --remote --merge vendor/libs && bun install",
     "submodules:update:libs": "git submodule update --remote --merge vendor/libs && bun install",

@@ -27,50 +27,50 @@
     "README.md",
     "LICENSE"
   ],
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
+      "types": "./src/index.ts",
       "bun": "./src/index.ts",
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./contracts": {
+      "types": "./src/contracts/index.ts",
       "bun": "./src/contracts/index.ts",
-      "types": "./dist/contracts/index.d.ts",
-      "import": "./dist/contracts/index.js",
-      "default": "./dist/contracts/index.js"
+      "import": "./src/contracts/index.ts",
+      "default": "./src/contracts/index.ts"
     },
     "./transport": {
+      "types": "./src/transport/index.ts",
       "bun": "./src/transport/index.ts",
-      "types": "./dist/transport/index.d.ts",
-      "import": "./dist/transport/index.js",
-      "default": "./dist/transport/index.js"
+      "import": "./src/transport/index.ts",
+      "default": "./src/transport/index.ts"
     },
     "./session": {
+      "types": "./src/session/index.ts",
       "bun": "./src/session/index.ts",
-      "types": "./dist/session/index.d.ts",
-      "import": "./dist/session/index.js",
-      "default": "./dist/session/index.js"
+      "import": "./src/session/index.ts",
+      "default": "./src/session/index.ts"
     },
     "./persistence": {
+      "types": "./src/persistence/core/index.ts",
       "bun": "./src/persistence/core/index.ts",
-      "types": "./dist/persistence/core/index.d.ts",
-      "import": "./dist/persistence/core/index.js",
-      "default": "./dist/persistence/core/index.js"
+      "import": "./src/persistence/core/index.ts",
+      "default": "./src/persistence/core/index.ts"
     },
     "./sqlite": {
+      "types": "./src/persistence/sqlite/index.ts",
       "bun": "./src/persistence/sqlite/index.ts",
-      "types": "./dist/persistence/sqlite/index.d.ts",
-      "import": "./dist/persistence/sqlite/index.js",
-      "default": "./dist/persistence/sqlite/index.js"
+      "import": "./src/persistence/sqlite/index.ts",
+      "default": "./src/persistence/sqlite/index.ts"
     },
     "./pool": {
+      "types": "./src/pool/index.ts",
       "bun": "./src/pool/index.ts",
-      "types": "./dist/pool/index.d.ts",
-      "import": "./dist/pool/index.js",
-      "default": "./dist/pool/index.js"
+      "import": "./src/pool/index.ts",
+      "default": "./src/pool/index.ts"
     },
     "./vellum-config.schema.json": "./vellum-config.schema.json"
   },
