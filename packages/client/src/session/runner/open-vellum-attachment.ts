@@ -1,8 +1,9 @@
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
-import { RelayClient } from "@khoralabs/relay/client";
 import type { VellumPathConfig } from "../../contracts";
 import type { VellumPersistence } from "../../persistence/core/types";
 import type { VellumControlTransport } from "../../transport";
+import type { ChannelFabric } from "../core";
+import { createRelayChannelFabric } from "../fabric/relay";
 import { runVellumSession, type VellumSessionHandle } from "./run-vellum-session";
 
 export type OpenVellumAttachmentOptions = {
@@ -10,13 +11,18 @@ export type OpenVellumAttachmentOptions = {
   signer: PersistableSigner;
   channelId: string;
   cfg: VellumPathConfig;
-  /** When omitted, mint a fresh channel ticket. */
+  /** When omitted, mint via {@link ChannelFabric.ensureAttached}. */
   webSocketUrl?: string;
   webSocketNonce?: string;
   lastBlobId?: number;
   persistence?: VellumPersistence;
   json?: boolean;
   onFatal?: (error: unknown) => void;
+  /**
+   * Channel fabric for membership + frame byte bus.
+   * Defaults to {@link createRelayChannelFabric}.
+   */
+  fabric?: ChannelFabric;
 };
 
 export type VellumAttachmentHandle = {
@@ -32,13 +38,17 @@ export type VellumAttachmentHandle = {
 };
 
 /**
- * Mint a relay ticket (unless WS URL provided) and start an in-process session.
+ * Ensure channel credentials (unless WS URL provided) and start an in-process session.
  * Does not spawn a daemon. Await {@link VellumAttachmentHandle.ready} before ops.
+ *
+ * WebSocket credentials are optional: fabrics that do not use WS may return none from
+ * {@link ChannelFabric.ensureAttached}; values are forwarded to {@link runVellumSession} as-is.
  */
 export function openVellumAttachment(opts: OpenVellumAttachmentOptions): VellumAttachmentHandle {
   const channelId = opts.channelId.trim();
   if (channelId.length === 0) throw new Error("openVellumAttachment: channelId is required");
 
+  const fabric = opts.fabric ?? createRelayChannelFabric({ relayBaseUrl: opts.relayBaseUrl });
   let disposed = false;
   let session: VellumSessionHandle | undefined;
 
@@ -53,17 +63,16 @@ export function openVellumAttachment(opts: OpenVellumAttachmentOptions): VellumA
       webSocketNonce === undefined ||
       webSocketNonce.length === 0
     ) {
-      const relay = new RelayClient({
-        relayBaseUrl: opts.relayBaseUrl,
+      const ticket = await fabric.ensureAttached({
+        channelId,
         signer: opts.signer,
       });
-      const ticket = await relay.mintTicket(channelId);
       if (disposed) {
         throw new DOMException("Vellum attachment closed before ready", "AbortError");
       }
-      webSocketUrl = ticket.webSocketUrl;
-      webSocketNonce = ticket.upgradeNonce;
-      lastBlobId = ticket.lastBlobId;
+      webSocketUrl = ticket.webSocketUrl ?? webSocketUrl;
+      webSocketNonce = ticket.webSocketNonce ?? webSocketNonce;
+      lastBlobId = ticket.lastBlobId ?? lastBlobId;
     }
 
     if (disposed) {
@@ -81,6 +90,7 @@ export function openVellumAttachment(opts: OpenVellumAttachmentOptions): VellumA
       persistence: opts.persistence,
       json: opts.json,
       onFatal: opts.onFatal,
+      fabric,
     });
     if (disposed) {
       session.close();

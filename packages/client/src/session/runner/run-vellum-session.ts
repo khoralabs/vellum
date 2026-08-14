@@ -8,7 +8,6 @@ import { createObpSqlitePersistenceClient, openObpDatabase } from "@khoralabs/ob
 import { validateBindPolicyAtExpose } from "@khoralabs/obp-nbc";
 import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
 import { RelayClient } from "@khoralabs/relay/client";
-import { relayWsUpgradeProtocol } from "@khoralabs/relay/contracts";
 import { base64UrlToBytes } from "@khoralabs/relay/crypto";
 import { fetchMlsWelcomeHttp, MlsGroupSession } from "@khoralabs/relay/mls";
 import { cfgDataDir, channelSqlitePath, type VellumPathConfig } from "../../contracts";
@@ -21,14 +20,16 @@ import type { VellumPersistence } from "../../persistence/core/types";
 import { createVellumPersistence } from "../../persistence/sqlite/vellum-persistence";
 import { InProcessControlTransport, type VellumControlTransport } from "../../transport";
 import { startVellumControlServer } from "../control-http";
-import type { VellumControlServerState } from "../core";
-import { connectObpOverRelay } from "../relay";
+import type { ChannelFabric, VellumControlServerState } from "../core";
+import { createRelayChannelFabric } from "../fabric/relay";
+import { connectObpOverByteChannel } from "../relay";
 
 export type RunVellumSessionOptions = {
   relayBaseUrl: string;
   signer: PersistableSigner;
   channelId: string;
-  webSocketUrl: string;
+  /** Optional; when omitted, resolved via {@link ChannelFabric.ensureAttached}. */
+  webSocketUrl?: string;
   /** Sec-WebSocket-Protocol nonce; prefer explicit over env. */
   webSocketNonce?: string;
   lastBlobId?: number;
@@ -38,6 +39,11 @@ export type RunVellumSessionOptions = {
   persistence?: VellumPersistence;
   /** Called on fatal KeyPackage replenish failure instead of process.exit. */
   onFatal?: (error: unknown) => void;
+  /**
+   * Channel fabric for membership + frame byte bus.
+   * Defaults to {@link createRelayChannelFabric} (one WS per session).
+   */
+  fabric?: ChannelFabric;
 };
 
 function logLine(json: boolean, label: string, payload: unknown): void {
@@ -65,9 +71,11 @@ export type VellumSessionHandle = {
  */
 export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHandle {
   const json = opts.json === true;
+  const fabric = opts.fabric ?? createRelayChannelFabric({ relayBaseUrl: opts.relayBaseUrl });
   const ac = new AbortController();
   let disposed = false;
   let serverStop: (() => void) | undefined;
+  let frameClose: (() => void) | undefined;
   let controlTransport: VellumControlTransport | undefined;
   let resolveReady!: () => void;
   let rejectReady!: (e: unknown) => void;
@@ -150,15 +158,36 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
       logLine(json, "vellum_keypackages_published", { did: frameSigner.did });
 
       logLine(json, "vellum_open", { channelId: opts.channelId, sqlitePath });
-      const wsNonce = opts.webSocketNonce?.trim() ?? process.env.VELLUM_CHANNEL_WS_NONCE?.trim();
-      const webSocketProtocols =
-        wsNonce !== undefined && wsNonce.length > 0 ? [relayWsUpgradeProtocol(wsNonce)] : undefined;
-      const replayAfter = opts.lastBlobId;
-      await connectObpOverRelay(
+      let webSocketUrl = opts.webSocketUrl?.trim();
+      let webSocketNonce =
+        opts.webSocketNonce?.trim() ?? process.env.VELLUM_CHANNEL_WS_NONCE?.trim();
+      let lastBlobId = opts.lastBlobId;
+      if (
+        webSocketUrl === undefined ||
+        webSocketUrl.length === 0 ||
+        webSocketNonce === undefined ||
+        webSocketNonce.length === 0
+      ) {
+        const ticket = await fabric.ensureAttached({
+          channelId: opts.channelId,
+          signer: opts.signer,
+        });
+        webSocketUrl = ticket.webSocketUrl ?? webSocketUrl;
+        webSocketNonce = ticket.webSocketNonce ?? webSocketNonce;
+        lastBlobId = ticket.lastBlobId ?? lastBlobId;
+      }
+      const frame = await fabric.openFrameChannel({
+        channelId: opts.channelId,
+        signer: opts.signer,
+        webSocketUrl,
+        webSocketNonce,
+        lastBlobId,
+      });
+      frameClose = frame.close;
+      await connectObpOverByteChannel(
         {
-          webSocketUrl: opts.webSocketUrl,
-          webSocketProtocols,
-          replayAfter,
+          channel: frame.channel,
+          onChannelClose: () => frame.close(),
           signer: frameSigner,
           client: persistence,
           validateBindPayload: (bindPolicy, bindPayload) =>
@@ -171,7 +200,16 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
               }
 
               const peerParty = handle.init.parties.find((p) => p.pubkey !== frameSigner.actor);
-              if (peerParty !== undefined) {
+              const peerDid = peerParty?.id;
+              const readyResult = await fabric.onSessionReady?.({
+                channelId: opts.channelId,
+                localDid: frameSigner.did,
+                peerDid,
+                sessionId: handle.sessionId,
+              });
+              const skipMls = readyResult?.skipDefaultMlsWelcome === true;
+
+              if (peerParty !== undefined && !skipMls) {
                 try {
                   const fetched = await fetchMlsWelcomeHttp(
                     opts.relayBaseUrl,
@@ -253,6 +291,14 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
           }
           logLine(json, "vellum_roster_synced", { members: snapshot.members.length });
 
+          const isSessionAllocated =
+            fabric.isSessionAllocated !== undefined
+              ? (sessionId: string) =>
+                  Promise.resolve(fabric.isSessionAllocated?.(opts.channelId, sessionId)).then(
+                    (v) => v === true,
+                  )
+              : (sessionId: string) => channelClient.isSessionAllocated(opts.channelId, sessionId);
+
           const server = startVellumControlServer({
             state,
             db: database,
@@ -260,13 +306,12 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
             persistence,
             signer: opts.signer,
             myActorPubkeyHex: frameSigner.actor,
-            isSessionAllocated: (sessionId) =>
-              channelClient.isSessionAllocated(opts.channelId, sessionId),
+            isSessionAllocated,
           });
           serverStop = server.stop;
           controlTransport = new InProcessControlTransport(server.dispatch);
           const existing = readVellumControlFile(opts.cfg, opts.channelId);
-          const initialLastBlobId = opts.lastBlobId ?? existing?.lastBlobId;
+          const initialLastBlobId = lastBlobId ?? existing?.lastBlobId;
           writeVellumControlFile(opts.cfg, opts.channelId, {
             pid: process.pid,
             controlPort: server.port,
@@ -282,7 +327,8 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
           const blobIdUpdateInterval =
             initialLastBlobId !== undefined
               ? setInterval(() => {
-                  const est = initialLastBlobId + getFrameCount();
+                  const delta = frame.getRelaySequenceDelta?.() ?? getFrameCount();
+                  const est = initialLastBlobId + delta;
                   writeVellumControlFile(opts.cfg, opts.channelId, {
                     pid: process.pid,
                     controlPort: server.port,
@@ -311,6 +357,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
     } finally {
       kpm?.stopAutoReplenish();
       serverStop?.();
+      frameClose?.();
       removeVellumControlFile(opts.cfg, opts.channelId);
       try {
         db?.close();

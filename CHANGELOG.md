@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ChannelFabric` port (`session/core`) plus `createRelayChannelFabric` (1 WS per DID) and `createSharedUplinkChannelFabric` (shared uplink + local short-circuit; host `HostInclusion` for MLS skip).
+
 ### Changed
 
 - **Breaking:** Unified `VellumMetaPersistence` and `VellumReadModel` into `VellumPersistence` (`createVellumPersistence` / `createVellumPersistenceAtPath`). Session/attachment option `meta` → `persistence`; `VellumClient` option `readPersistence` → `persistence`.

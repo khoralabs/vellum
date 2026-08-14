@@ -1,6 +1,7 @@
 import path from "node:path";
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import {
+  type ChannelFabric,
   type OpenVellumAttachmentOptions,
   openVellumAttachment,
   type VellumAttachmentHandle,
@@ -40,6 +41,11 @@ export type VellumPoolOptions = {
    * (mint ticket + in-process session).
    */
   openAttachment?: OpenPoolAttachment;
+  /**
+   * Shared by default opens via {@link openVellumAttachment}.
+   * Pass {@link createSharedUplinkChannelFabric} for custodial multi-DID hosts.
+   */
+  fabric?: ChannelFabric;
 };
 
 function attachmentKey(did: string, channelId: string): string {
@@ -62,13 +68,14 @@ type BoundAttachment = {
 /**
  * Host-facing channel attachment pool (Khora HarnessPoolInbox shape).
  *
- * Membership is per `(did, channelId)`. Wire still opens **one relay WebSocket per
- * attachment** today; demux is by did+channelId on this host.
+ * Membership is per `(did, channelId)`. With the default relay fabric, wire opens
+ * one WebSocket per attachment; with a shared-uplink fabric, local DIDs share one uplink.
  */
 export class VellumPool {
   readonly #relayBaseUrl: string;
   readonly #dataDirRoot: string;
   readonly #openAttachment: OpenPoolAttachment;
+  readonly #fabric: ChannelFabric | undefined;
   readonly #attachments = new Map<string, BoundAttachment>();
   /** In-flight bind promises keyed by attachment; concurrent binds await the same promise. */
   readonly #pendingBinds = new Map<string, Promise<void>>();
@@ -87,6 +94,7 @@ export class VellumPool {
       throw new Error("VellumPool: dataDirRoot is required");
     }
     this.#dataDirRoot = path.resolve(dataDirRoot);
+    this.#fabric = opts.fabric;
     this.#openAttachment = opts.openAttachment ?? openVellumAttachment;
   }
 
@@ -152,6 +160,7 @@ export class VellumPool {
           signer,
           channelId,
           cfg: { dataDir },
+          ...(this.#fabric !== undefined ? { fabric: this.#fabric } : {}),
         }),
       );
       await session.ready;
