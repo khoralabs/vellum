@@ -9,9 +9,7 @@ bun run submodules:init   # vendor/libs
 bun install
 ```
 
-Workspace packages come from this repo (`apps/*`, `packages/*`) plus `vendor/libs` (`cli-kit`, …).
-
-OBP packages are consumed from this checkout via workspace paths (`../open-binding-protocol/packages/*`) until `@khoralabs/obp-*` 0.2 is published.
+Workspace packages come from this repo (`apps/*`, `packages/*`) plus `vendor/libs` (`cli-kit`, …). OBP is `@khoralabs/obp-core` / `@khoralabs/obp-nbc` / `@khoralabs/obp-wire` from npm.
 
 ## Format / husky
 

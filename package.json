@@ -5,10 +5,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "vendor/libs/packages/*/**",
-    "../open-binding-protocol/packages/core",
-    "../open-binding-protocol/packages/nbc",
-    "../open-binding-protocol/packages/wire"
+    "vendor/libs/packages/*/**"
   ],
   "scripts": {
     "format": "biome check --write .",
