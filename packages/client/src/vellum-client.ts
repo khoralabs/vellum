@@ -9,6 +9,11 @@ import {
   type PersistableSigner,
 } from "@khoralabs/did-key-identity";
 import type { JsonDocument } from "@khoralabs/obp-core";
+import {
+  continueTurnSchemaForPorts,
+  type ObpStandardSchema,
+  openingTurnSchema,
+} from "@khoralabs/obp-nbc";
 import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
 import { RelayClient } from "@khoralabs/relay/client";
 import type { RelaySessionQuota } from "@khoralabs/relay/contracts";
@@ -19,6 +24,7 @@ import {
   MlsGroupSession,
   publishMlsWelcomeHttp,
 } from "@khoralabs/relay/mls";
+import type { ChainSnapshot } from "./chain/vellum-chain";
 import { createVellumChannel, joinVellumChannel } from "./channel-ops";
 import {
   type ChainInitResponse,
@@ -27,7 +33,6 @@ import {
   ChainStateResponseSchema,
   cfgDataDir,
   channelSqlitePath,
-  DEFAULT_GENESIS_TURN_WIRE,
   type VellumChainRow,
   type VellumOfferRow,
   type VellumPathConfig,
@@ -351,8 +356,6 @@ export class VellumClient {
         route: generateRouteHandle(),
       });
 
-      const genesisTurn = input.genesisTurn ?? DEFAULT_GENESIS_TURN_WIRE;
-
       const roster = await channelClient.getRoster(this.opts.channelId);
       const peerMember = roster.members.find((m) => m.principalUri === peerDid);
       const peerIdentityKey = peerMember?.actorPubkey?.trim();
@@ -360,15 +363,25 @@ export class VellumClient {
         throw new Error(`peer identity key not in roster for ${peerDid}`);
       }
 
-      const payload = {
+      const payload: {
+        init: {
+          session_id: string;
+          genesis_hash: string;
+          party_dids: [string, string];
+          peer_identity_key: string;
+        };
+        genesis_turn?: Record<string, unknown>;
+      } = {
         init: {
           session_id: sessionId,
           genesis_hash: genesis,
-          party_dids: [myDid, peerDid] as [string, string],
+          party_dids: [myDid, peerDid],
           peer_identity_key: peerIdentityKey,
         },
-        genesis_turn: genesisTurn,
       };
+      if (input.genesisTurn !== undefined) {
+        payload.genesis_turn = input.genesisTurn;
+      }
       const res = await this.control().fetch("/chain/init", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -405,6 +418,49 @@ export class VellumClient {
     if (!res.ok) {
       throw new Error(httpFailMessage(res.statusText, j));
     }
+  }
+
+  async endOffers(sessionId: string): Promise<void> {
+    const res = await this.control().fetch("/chain/end-offers", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    });
+    const j: unknown = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(httpFailMessage(res.statusText, j));
+    }
+  }
+
+  async terminateChain(sessionId: string): Promise<void> {
+    const res = await this.control().fetch("/chain/close", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    });
+    const j: unknown = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(httpFailMessage(res.statusText, j));
+    }
+  }
+
+  async getSessionSnapshot(sessionId: string): Promise<ChainSnapshot> {
+    const res = await this.control().fetch(`/chain/${encodeURIComponent(sessionId)}`);
+    const j: unknown = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(httpFailMessage(res.statusText, j));
+    }
+    const snap = j as Omit<ChainSnapshot, "schema">;
+    const schema: ObpStandardSchema =
+      snap.graph.offers.length === 0
+        ? openingTurnSchema
+        : continueTurnSchemaForPorts(
+            snap.portsICanBind.map((p) => ({
+              id: p.id,
+              bind_policy: (p.bind_policy ?? null) as JsonDocument | null,
+            })),
+          );
+    return { ...snap, schema };
   }
 
   async getChainSnapshot(): Promise<ChainStateResponse> {

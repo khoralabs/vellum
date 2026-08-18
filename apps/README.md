@@ -32,7 +32,7 @@ vellum channel create --json
 vellum channel attach --invite-token=...
 vellum channel attach <channelId>          # parallel channel
 vellum list
-vellum --channel <channelId> chain create --peer-party=... --peer-key=... --peer-did=...
+vellum --channel <channelId> chain create --peer-did=... (--genesis-json=... | --init-only)
 vellum channel attach --all                # re-attach all non-running local channels
 ```
 

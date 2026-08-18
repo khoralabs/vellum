@@ -11,7 +11,7 @@ bun install
 
 Workspace packages come from this repo (`apps/*`, `packages/*`) plus `vendor/libs` (`cli-kit`, …).
 
-OBP and relay are normal npm dependencies: `@khoralabs/obp-*`, `@khoralabs/relay`.
+OBP packages are consumed from this checkout via workspace paths (`../open-binding-protocol/packages/*`) until `@khoralabs/obp-*` 0.2 is published.
 
 ## Format / husky
 

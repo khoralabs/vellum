@@ -1,6 +1,26 @@
 # `@khoralabs/vellum-client`
 
-Library API for Vellum: channel/relay ops, local daemon control, NBC graph reads, wire contracts, and control transport.
+Library API for Vellum: channel/relay ops, local daemon control, NBC graph reads, and `VellumChain` (`open` → `turns` → `commit`).
+
+## Host loop
+
+Channel attach (`connect` / pool bind) is not chain init. Open a chain, generate against the Standard Schema on `turn.schema`, commit.
+
+```ts
+import { VellumChain, VellumClient } from "@khoralabs/vellum-client";
+
+const client = new VellumClient({ relayBaseUrl, channelId });
+await client.connect();
+const chain = await VellumChain.open(client, { peer });
+for await (const turn of chain.turns()) {
+  if (turn.youAct) {
+    const body = await generate(turn.schema); // opening | continue | leave
+    await chain.commit(body);
+  }
+}
+```
+
+`expires_at_ms: 0` (default) means no wall-clock expiry — use that for model-driven loops. Leave maps to `END_OFFERS`; `chain.close()` sends `TERMINATE` and releases the relay slot.
 
 ## Exports
 

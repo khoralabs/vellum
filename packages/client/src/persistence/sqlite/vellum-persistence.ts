@@ -8,7 +8,8 @@ const META_DDL = `
 CREATE TABLE IF NOT EXISTS vellum_chains (
   session_id TEXT PRIMARY KEY NOT NULL,
   genesis_hash TEXT NOT NULL,
-  created_ms INTEGER NOT NULL
+  created_ms INTEGER NOT NULL,
+  initiator_did TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS vellum_roster (
@@ -48,16 +49,16 @@ function readPortRow(db: Database, portId: string): VellumPortRow | undefined {
     .query<
       {
         id: string;
-        type: string;
+        kind: string;
         promise: string;
         ref: string;
         nbc_expires_turn: number;
-        nbc_expires_at_relay_ms: number;
+        nbc_expires_at_ms: number;
         bind_policy_json: string | null;
       },
       [string]
     >(
-      `SELECT id, type, promise, ref, nbc_expires_turn, nbc_expires_at_relay_ms, bind_policy_json FROM obp_ports WHERE id = ?`,
+      `SELECT id, kind, promise, ref, nbc_expires_turn, nbc_expires_at_ms, bind_policy_json FROM obp_ports WHERE id = ?`,
     )
     .get(portId);
   if (r == null) return undefined;
@@ -71,11 +72,11 @@ function readPortRow(db: Database, portId: string): VellumPortRow | undefined {
   }
   return {
     id: r.id,
-    type: r.type,
+    kind: r.kind,
     promise: r.promise,
     ref: r.ref,
     nbc_expires_turn: r.nbc_expires_turn,
-    nbc_expires_at_relay_ms: r.nbc_expires_at_relay_ms,
+    nbc_expires_at_ms: r.nbc_expires_at_ms,
     bind_policy,
   };
 }
@@ -88,14 +89,41 @@ export function createVellumPersistence(db: Database): VellumPersistence {
   return {
     ensureSchema(): void {
       db.run(META_DDL);
+      const cols = db
+        .query<{ name: string }, []>("PRAGMA table_info(vellum_chains)")
+        .all()
+        .map((r) => r.name);
+      if (!cols.includes("initiator_did")) {
+        db.run("ALTER TABLE vellum_chains ADD COLUMN initiator_did TEXT NOT NULL DEFAULT ''");
+      }
     },
 
-    upsertChain(sessionId: string, genesisHash: string, createdMs: number): void {
+    upsertChain(
+      sessionId: string,
+      genesisHash: string,
+      createdMs: number,
+      initiatorDid?: string,
+    ): void {
+      const initiator = initiatorDid?.trim() ?? "";
       db.run(
-        `INSERT INTO vellum_chains (session_id, genesis_hash, created_ms)
-         VALUES (?, ?, ?)
-         ON CONFLICT(session_id) DO NOTHING`,
-        [sessionId, genesisHash, createdMs],
+        `INSERT INTO vellum_chains (session_id, genesis_hash, created_ms, initiator_did)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(session_id) DO UPDATE SET
+           initiator_did = CASE
+             WHEN vellum_chains.initiator_did = '' AND excluded.initiator_did != '' THEN excluded.initiator_did
+             ELSE vellum_chains.initiator_did
+           END`,
+        [sessionId, genesisHash, createdMs, initiator],
+      );
+    },
+
+    getChain(sessionId: string): VellumChainRow | undefined {
+      return (
+        db
+          .query<VellumChainRow, [string]>(
+            `SELECT session_id, genesis_hash, created_ms, initiator_did FROM vellum_chains WHERE session_id = ?`,
+          )
+          .get(sessionId) ?? undefined
       );
     },
 
@@ -185,7 +213,7 @@ export function createVellumPersistence(db: Database): VellumPersistence {
     listChains(): VellumChainRow[] {
       return db
         .query<VellumChainRow, []>(
-          `SELECT session_id, genesis_hash, created_ms FROM vellum_chains ORDER BY created_ms ASC`,
+          `SELECT session_id, genesis_hash, created_ms, initiator_did FROM vellum_chains ORDER BY created_ms ASC`,
         )
         .all();
     },
@@ -193,7 +221,7 @@ export function createVellumPersistence(db: Database): VellumPersistence {
     listOffers(): VellumOfferRow[] {
       return db
         .query<VellumOfferRow, []>(
-          `SELECT id, type, nbc_expires_turn, nbc_expires_at_relay_ms FROM obp_offers ORDER BY created_seq ASC`,
+          `SELECT id, type, nbc_expires_turn, nbc_expires_at_ms FROM obp_offers ORDER BY created_seq ASC`,
         )
         .all();
     },
@@ -202,7 +230,7 @@ export function createVellumPersistence(db: Database): VellumPersistence {
       return (
         db
           .query<VellumOfferRow, [string]>(
-            `SELECT id, type, nbc_expires_turn, nbc_expires_at_relay_ms FROM obp_offers WHERE id = ?`,
+            `SELECT id, type, nbc_expires_turn, nbc_expires_at_ms FROM obp_offers WHERE id = ?`,
           )
           .get(offerId) ?? undefined
       );
@@ -244,10 +272,13 @@ export function createVellumPersistenceAtPath(sqlitePath: string): VellumPersist
     ensureSchema(): void {
       withDb(false, (db) => createVellumPersistence(db).ensureSchema());
     },
-    upsertChain(sessionId, genesisHash, createdMs): void {
+    upsertChain(sessionId, genesisHash, createdMs, initiatorDid): void {
       withDb(false, (db) =>
-        createVellumPersistence(db).upsertChain(sessionId, genesisHash, createdMs),
+        createVellumPersistence(db).upsertChain(sessionId, genesisHash, createdMs, initiatorDid),
       );
+    },
+    getChain(sessionId): VellumChainRow | undefined {
+      return withDb(true, (db) => createVellumPersistence(db).getChain(sessionId));
     },
     upsertRosterEntry(principalUri, actorPubkey, updatedMs): void {
       withDb(false, (db) =>

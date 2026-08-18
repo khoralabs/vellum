@@ -1,4 +1,4 @@
-export { createVellumControlDispatch } from "./control-dispatch";
+export { buildChainSnapshot, createVellumControlDispatch } from "./control-dispatch";
 export type {
   ChannelFabric,
   ChannelFabricEnsureAttachedResult,
@@ -10,5 +10,6 @@ export type {
 export type {
   CreateVellumControlDispatchOptions,
   VellumControlDispatch,
+  VellumControlEvent,
   VellumControlServerState,
 } from "./types";

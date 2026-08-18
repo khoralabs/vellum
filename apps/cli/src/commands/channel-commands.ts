@@ -1,5 +1,5 @@
 import type { FlagMap } from "@khoralabs/cli-kit";
-import { strFlag } from "@khoralabs/cli-kit";
+import { boolFlag, strFlag } from "@khoralabs/cli-kit";
 import { parseNbcTurnBody } from "@khoralabs/obp-nbc";
 
 import type { VellumClient } from "@khoralabs/vellum-client";
@@ -20,14 +20,20 @@ export async function handleChainCreate(flags: FlagMap): Promise<void> {
   if (peerDid === undefined) {
     throw new Error("chain create requires --peer-did");
   }
+  const initOnly = boolFlag(flags, "init-only");
   const genesisJson = strFlag(flags, "genesis-json");
   let genesisTurn: Record<string, unknown> | undefined;
   if (genesisJson !== undefined && genesisJson.length > 0) {
+    if (initOnly) {
+      throw new Error("chain create: use --genesis-json or --init-only, not both");
+    }
     const parsed = readJsonArg(genesisJson);
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("chain create --genesis-json must be a JSON object");
     }
     genesisTurn = parsed as Record<string, unknown>;
+  } else if (!initOnly) {
+    throw new Error("chain create requires --genesis-json or --init-only");
   }
   const out = await client.chainCreate({
     counterpartyDid: peerDid,
@@ -45,6 +51,13 @@ export function handleChainList(flags: FlagMap): void {
 
 export async function handleChainSnapshot(flags: FlagMap): Promise<void> {
   const client = clientForChannelCommands(flags);
+  const sessionId = strFlag(flags, "session");
+  if (sessionId !== undefined) {
+    const snap = await client.getSessionSnapshot(sessionId);
+    const { schema: _schema, ...rest } = snap;
+    console.log(JSON.stringify(rest, null, 2));
+    return;
+  }
   console.log(JSON.stringify(await client.getChainSnapshot(), null, 2));
 }
 

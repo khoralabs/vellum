@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import { createInMemoryObpPersistenceClient } from "@khoralabs/obp-core/persistence";
-import { ChainInitWireSchema, DEFAULT_GENESIS_TURN_WIRE } from "../../contracts";
+import { ChainInitWireSchema } from "../../contracts";
 import { createVellumPersistence } from "../../persistence/sqlite/vellum-persistence";
 import { testControlSigner } from "../testing/test-signer";
 import { startVellumControlServer } from "./server";
@@ -35,7 +35,6 @@ test("chain/init rejects without relay allocation when check enabled", async () 
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       init: sampleInit,
-      genesis_turn: DEFAULT_GENESIS_TURN_WIRE,
     }),
   });
   expect(res.status).toBe(409);

@@ -5,7 +5,7 @@ const chainChannelNote = `Channel id required: --channel=<id>.`;
 export const chainCreateHelp: CommandHelp = {
   command: "chain create",
   summary: "Create NBC chain state with a peer",
-  args: `vellum [--channel=<id>] chain create --peer-party=<uuid> --peer-key=<hex> --peer-did=<did> [--genesis-json='<JSON>'|@path] [--session][--genesis][--my-party]
+  args: `vellum [--channel=<id>] chain create --peer-did=<did> (--genesis-json='<JSON>'|@path | --init-only) [--session] [--genesis]
 
 ${chainChannelNote}`,
 };
@@ -20,8 +20,8 @@ ${chainChannelNote}`,
 
 export const chainSnapshotHelp: CommandHelp = {
   command: "chain snapshot",
-  summary: "Print current chain snapshot",
-  args: `vellum [--channel=<id>] chain snapshot
+  summary: "Print chain list, or a session graph snapshot with whoShouldAct",
+  args: `vellum [--channel=<id>] chain snapshot [--session=<sessionId>]
 
 ${chainChannelNote}`,
 };

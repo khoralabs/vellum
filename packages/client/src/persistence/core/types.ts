@@ -8,7 +8,14 @@ import type { VellumChainRow, VellumOfferRow, VellumPortRow } from "../../contra
 export interface VellumPersistence {
   ensureSchema(): void;
 
-  upsertChain(sessionId: string, genesisHash: string, createdMs: number): void;
+  upsertChain(
+    sessionId: string,
+    genesisHash: string,
+    createdMs: number,
+    initiatorDid?: string,
+  ): void;
+
+  getChain(sessionId: string): VellumChainRow | undefined;
 
   upsertRosterEntry(principalUri: string, actorPubkey: string, updatedMs: number): void;
 

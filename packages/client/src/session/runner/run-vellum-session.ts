@@ -5,7 +5,7 @@ import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import { createHexSigner, identityPrivFromPersistableSigner } from "@khoralabs/did-key-identity";
 import type { JsonDocument } from "@khoralabs/obp-core";
 import { createObpSqlitePersistenceClient, openObpDatabase } from "@khoralabs/obp-core/sqlite";
-import { validateBindPolicyAtExpose } from "@khoralabs/obp-nbc";
+import { collectNbcChainGraph, validateBindPolicyAtExpose, whoShouldAct } from "@khoralabs/obp-nbc";
 import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
 import { RelayClient } from "@khoralabs/relay/client";
 import { base64UrlToBytes } from "@khoralabs/relay/crypto";
@@ -116,6 +116,8 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
       const state: VellumControlServerState = {
         conn: undefined,
         handles: new Map(),
+        events: new Set(),
+        initiators: new Map(),
       };
 
       if (ac.signal.aborted) {
@@ -256,7 +258,33 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
               }
 
               state.handles.set(handle.sessionId, handle);
+              vellum.upsertChain(handle.sessionId, handle.init.genesis_hash, Date.now(), peerDid);
               logLine(json, "vellum_chain_ready", { sessionId: handle.sessionId });
+            },
+            onGraphAdvanced: async (event, _session) => {
+              const listeners = state.events;
+              if (listeners === undefined) return;
+              const adv = { kind: "graph-advanced" as const, sessionId: event.sessionId };
+              for (const fn of listeners) fn(adv);
+              try {
+                const graph = await collectNbcChainGraph(persistence);
+                const stored = vellum.getChain(event.sessionId)?.initiator_did?.trim();
+                const initiatorId =
+                  (stored !== undefined && stored.length > 0 ? stored : undefined) ??
+                  (state.initiators ?? new Map()).get(event.sessionId) ??
+                  frameSigner.did;
+                const acting = whoShouldAct(graph, { initiatorId });
+                if (acting === frameSigner.did) {
+                  const yt = {
+                    kind: "your-turn" as const,
+                    sessionId: event.sessionId,
+                    offersLength: graph.offers.length,
+                  };
+                  for (const fn of listeners) fn(yt);
+                }
+              } catch {
+                // snapshot optional
+              }
             },
             onFrameError: (() => {
               let suppressed = 0;

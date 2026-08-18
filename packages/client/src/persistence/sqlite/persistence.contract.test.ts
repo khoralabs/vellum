@@ -12,16 +12,16 @@ CREATE TABLE IF NOT EXISTS obp_offers (
   id TEXT PRIMARY KEY NOT NULL,
   type TEXT NOT NULL,
   nbc_expires_turn INTEGER NOT NULL,
-  nbc_expires_at_relay_ms INTEGER NOT NULL,
+  nbc_expires_at_ms INTEGER NOT NULL,
   created_seq INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS obp_ports (
   id TEXT PRIMARY KEY NOT NULL,
-  type TEXT NOT NULL,
+  kind TEXT NOT NULL,
   promise TEXT NOT NULL,
   ref TEXT NOT NULL,
   nbc_expires_turn INTEGER NOT NULL,
-  nbc_expires_at_relay_ms INTEGER NOT NULL,
+  nbc_expires_at_ms INTEGER NOT NULL,
   bind_policy_json TEXT
 );
 CREATE TABLE IF NOT EXISTS obp_exposes (
@@ -37,7 +37,24 @@ function runVellumPersistenceContract(name: string, create: () => VellumPersiste
       store.upsertChain("s1", "gen", 1);
       store.upsertChain("s1", "gen-other", 2);
       const chains = store.listChains();
-      expect(chains).toEqual([{ session_id: "s1", genesis_hash: "gen", created_ms: 1 }]);
+      expect(chains).toEqual([
+        { session_id: "s1", genesis_hash: "gen", created_ms: 1, initiator_did: "" },
+      ]);
+    });
+
+    test("upsertChain fills empty initiator_did and getChain reads it", () => {
+      const store = create();
+      store.ensureSchema();
+      store.upsertChain("s1", "gen", 1);
+      store.upsertChain("s1", "gen-other", 2, "did:key:alice");
+      store.upsertChain("s1", "gen-other", 3, "did:key:bob");
+      expect(store.getChain("s1")).toEqual({
+        session_id: "s1",
+        genesis_hash: "gen",
+        created_ms: 1,
+        initiator_did: "did:key:alice",
+      });
+      expect(store.getChain("missing")).toBeUndefined();
     });
 
     test("roster upsert + get", () => {
@@ -67,27 +84,27 @@ function runVellumPersistenceContract(name: string, create: () => VellumPersiste
       const store = createVellumPersistence(db);
       store.ensureSchema();
       db.run(
-        `INSERT INTO obp_offers (id, type, nbc_expires_turn, nbc_expires_at_relay_ms, created_seq)
+        `INSERT INTO obp_offers (id, type, nbc_expires_turn, nbc_expires_at_ms, created_seq)
          VALUES ('o1', 'capability', 0, 0, 1)`,
       );
       db.run(
-        `INSERT INTO obp_ports (id, type, promise, ref, nbc_expires_turn, nbc_expires_at_relay_ms, bind_policy_json)
+        `INSERT INTO obp_ports (id, kind, promise, ref, nbc_expires_turn, nbc_expires_at_ms, bind_policy_json)
          VALUES ('p1', 'promise', 'x', 'r', 0, 0, '{"k":1}')`,
       );
       db.run(`INSERT INTO obp_exposes (offer_id, port_id) VALUES ('o1', 'p1')`);
 
       expect(store.listOffers()).toEqual([
-        { id: "o1", type: "capability", nbc_expires_turn: 0, nbc_expires_at_relay_ms: 0 },
+        { id: "o1", type: "capability", nbc_expires_turn: 0, nbc_expires_at_ms: 0 },
       ]);
       expect(store.readOffer("o1")?.id).toBe("o1");
       expect(store.listPortIdsForOffer("o1")).toEqual(["p1"]);
       expect(store.readPort("p1")).toEqual({
         id: "p1",
-        type: "promise",
+        kind: "promise",
         promise: "x",
         ref: "r",
         nbc_expires_turn: 0,
-        nbc_expires_at_relay_ms: 0,
+        nbc_expires_at_ms: 0,
         bind_policy: { k: 1 },
       });
     });
@@ -108,7 +125,9 @@ describe("createVellumPersistenceAtPath", () => {
     store.ensureSchema();
     expect(fs.existsSync(sqlitePath)).toBe(true);
     store.upsertChain("s1", "gen", 1);
-    expect(store.listChains()).toEqual([{ session_id: "s1", genesis_hash: "gen", created_ms: 1 }]);
+    expect(store.listChains()).toEqual([
+      { session_id: "s1", genesis_hash: "gen", created_ms: 1, initiator_did: "" },
+    ]);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 

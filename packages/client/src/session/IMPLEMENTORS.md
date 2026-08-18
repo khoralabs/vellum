@@ -34,8 +34,12 @@ Shared by HTTP serve and in-process dispatch:
 |--------|------|------|
 | `GET` | `/health` | Liveness (`204`) |
 | `GET` | `/chain` | Chain list + OBP graph summary counts |
-| `POST` | `/chain/init` | Outbound session init + genesis turn |
-| `POST` | `/turn` | Send turn on an open session |
+| `GET` | `/chain/:sessionId` | Graph snapshot: `whoShouldAct`, `portsICanBind`, `needsTurn` |
+| `GET` | `/events` | SSE: `committed` / `graph-advanced` / `your-turn` |
+| `POST` | `/chain/init` | Outbound session init; optional `genesis_turn` (omit = empty graph) |
+| `POST` | `/chain/end-offers` | `END_OFFERS` (leave) |
+| `POST` | `/chain/close` | `TERMINATE` (chain.close) |
+| `POST` | `/turn` | Send NBC turn on an open session |
 
 ## Runner wiring
 

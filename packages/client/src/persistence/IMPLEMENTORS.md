@@ -12,7 +12,8 @@ Operational contract for [`VellumPersistence`](./core/types.ts).
 ## Ops
 
 - `ensureSchema` — idempotent DDL for `vellum_*` tables
-- `upsertChain` — insert-or-ignore on `session_id`
+- `upsertChain` — insert on `session_id`; fill `initiator_did` only when the stored value is empty
+- `getChain` — row for one session, or `undefined`
 - `upsertRosterEntry` / `getRosterActor` — principal → actor pubkey
 - `upsertPreKeySecrets` / `loadPreKeySecrets` — SPK + OTK private halves
 - `upsertSessionKey` — per-session key material

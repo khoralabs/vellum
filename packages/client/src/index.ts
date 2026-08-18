@@ -1,3 +1,4 @@
+export { type ChainSnapshot, type TurnCue, VellumChain } from "./chain/vellum-chain";
 export {
   type CreateVellumChannelOptions,
   createVellumChannel,

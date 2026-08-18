@@ -11,7 +11,7 @@ const sampleInit = {
 
 describe("ChainInitRequestSchema", () => {
   test("accepts party_dids + peer_identity_key", () => {
-    const r = ChainInitRequestSchema.safeParse({ init: sampleInit, genesis_turn: {} });
+    const r = ChainInitRequestSchema.safeParse({ init: sampleInit });
     expect(r.success).toBe(true);
   });
 

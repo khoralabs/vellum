@@ -9,6 +9,7 @@ export {
   type FabricByteChannel,
   type OpenFabricFrameChannelResult,
   type VellumControlDispatch,
+  type VellumControlEvent,
   type VellumControlServerState,
 } from "./core";
 export {

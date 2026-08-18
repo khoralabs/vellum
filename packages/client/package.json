@@ -83,9 +83,9 @@
   "dependencies": {
     "@khoralabs/relay": "^0.1.1",
     "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "^0.1.0",
-    "@khoralabs/obp-nbc": "^0.1.0",
-    "@khoralabs/obp-wire": "^0.1.0",
+    "@khoralabs/obp-core": "^0.2.0",
+    "@khoralabs/obp-nbc": "^0.2.0",
+    "@khoralabs/obp-wire": "^0.2.0",
     "zod": "^4"
   },
   "devDependencies": {

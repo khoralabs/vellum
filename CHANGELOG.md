@@ -9,15 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `VellumChain` (`open` / `init` / `snapshot` / `waitForGraph` / `turns` / `commit` / `close`) for the host loop: generate against `turn.schema`, commit opening | continue | leave.
+- Control: optional genesis (`/chain/init` without `genesis_turn`), `GET /chain/:sessionId` snapshot (`whoShouldAct`, `portsICanBind`, `needsTurn`), `POST /chain/end-offers`, `POST /chain/close` (`TERMINATE`), `GET /events` SSE.
+- `/chain/init` trusts `peer_identity_key` when the attach-time roster cache misses.
 - `ChannelFabric` port (`session/core`) plus `createRelayChannelFabric` (1 WS per DID) and `createSharedUplinkChannelFabric` (shared uplink + local short-circuit; host `HostInclusion` for MLS skip).
 
 ### Changed
 
+- **Breaking:** Graph reads use `nbc_expires_at_ms` and port `kind` (aligned with OBP 0.2). Dummy `promise: "vellum-genesis"` default removed — omit genesis to open an empty graph, or pass a real opening turn.
+- Default bind windows for host profiles are `expires_at_ms: 0` / `expires_turn: 0` (no wall-clock expiry).
 - **Breaking:** Unified `VellumMetaPersistence` and `VellumReadModel` into `VellumPersistence` (`createVellumPersistence` / `createVellumPersistenceAtPath`). Session/attachment option `meta` → `persistence`; `VellumClient` option `readPersistence` → `persistence`.
 - Default channel SQLite access uses `bun:sqlite` only (no `better-sqlite3`).
 
 ### Removed
 
+- `DEFAULT_GENESIS_TURN_WIRE`.
 - `better-sqlite3` dependency and `SqliteVellumReadModel` / `VellumReadModel` / `VellumMetaPersistence` public surface.
 - API Extractor from the client publish build (ship `tsc` declaration tree as `dist/index.d.ts`).
 
