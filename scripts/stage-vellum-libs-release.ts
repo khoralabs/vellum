@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /**
  * Stage @khoralabs/vellum-client under release/ for npm publish (outside Bun workspaces).
- * Contracts / transport / OBP workspace deps and npm @khoralabs/relay are bundled into the client artifact.
+ * JS is bundled with OBP/relay left external (`scripts/build.ts`); those packages
+ * must be declared as published dependencies so consumers can resolve them.
  */
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -37,6 +38,10 @@ export function stagedDependencies(
 ): Record<string, string> {
   return {
     "@khoralabs/did-key-identity": "^0.1.0",
+    "@khoralabs/obp-core": "^0.2.0",
+    "@khoralabs/obp-nbc": "^0.2.0",
+    "@khoralabs/obp-wire": "^0.2.0",
+    "@khoralabs/relay": "^0.1.1",
     zod: "^4",
   };
 }
