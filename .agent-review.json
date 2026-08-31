@@ -5,7 +5,7 @@
     "commitMessage": "deepseek/deepseek-v4-flash-0731"
   },
   "skillsDirs": [".agents/skills"],
-  "blockOn": ["error"],
+  "blockOn": ["warning"],
   "maxDiffBytes": 200000,
   "defaultScope": "staged",
   "outputDir": ".data/agent-review",

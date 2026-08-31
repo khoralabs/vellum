@@ -72,6 +72,12 @@
       "import": "./src/pool/index.ts",
       "default": "./src/pool/index.ts"
     },
+    "./pool/host": {
+      "types": "./src/pool/host.ts",
+      "bun": "./src/pool/host.ts",
+      "import": "./src/pool/host.ts",
+      "default": "./src/pool/host.ts"
+    },
     "./vellum-config.schema.json": "./vellum-config.schema.json"
   },
   "scripts": {
