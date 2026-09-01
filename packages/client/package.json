@@ -4,7 +4,6 @@
   "description": "Vellum API client: daemon control POST + Bun SQLite channel store.",
   "license": "MIT",
   "type": "module",
-  "private": true,
   "engines": {
     "node": ">=18"
   },
@@ -32,49 +31,41 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "bun": "./src/index.ts",
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     },
     "./contracts": {
       "types": "./src/contracts/index.ts",
-      "bun": "./src/contracts/index.ts",
       "import": "./src/contracts/index.ts",
       "default": "./src/contracts/index.ts"
     },
     "./transport": {
       "types": "./src/transport/index.ts",
-      "bun": "./src/transport/index.ts",
       "import": "./src/transport/index.ts",
       "default": "./src/transport/index.ts"
     },
     "./session": {
       "types": "./src/session/index.ts",
-      "bun": "./src/session/index.ts",
       "import": "./src/session/index.ts",
       "default": "./src/session/index.ts"
     },
     "./persistence": {
       "types": "./src/persistence/core/index.ts",
-      "bun": "./src/persistence/core/index.ts",
       "import": "./src/persistence/core/index.ts",
       "default": "./src/persistence/core/index.ts"
     },
     "./sqlite": {
       "types": "./src/persistence/sqlite/index.ts",
-      "bun": "./src/persistence/sqlite/index.ts",
       "import": "./src/persistence/sqlite/index.ts",
       "default": "./src/persistence/sqlite/index.ts"
     },
     "./pool": {
       "types": "./src/pool/index.ts",
-      "bun": "./src/pool/index.ts",
       "import": "./src/pool/index.ts",
       "default": "./src/pool/index.ts"
     },
     "./pool/host": {
       "types": "./src/pool/host.ts",
-      "bun": "./src/pool/host.ts",
       "import": "./src/pool/host.ts",
       "default": "./src/pool/host.ts"
     },

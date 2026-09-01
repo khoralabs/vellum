@@ -16,7 +16,7 @@ on:
           - latest
           - next
       dry_run:
-        description: "Run npm publish --dry-run; skip git tag/push"
+        description: "Dry-run pack/publish; skip git tag/push"
         required: false
         type: boolean
         default: false
@@ -64,16 +64,23 @@ jobs:
 
       - name: test
         run: |
-          bun test packages/client scripts/stage-vellum-libs-release.test.ts
+          bun test packages/client scripts/publish-package-json.test.ts
+
+      - name: bump client version
+        run: |
+          node -e "
+            const fs = require('node:fs');
+            const p = 'packages/client/package.json';
+            const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
+            pkg.version = process.env.VERSION;
+            fs.writeFileSync(p, JSON.stringify(pkg, null, 2) + '\n');
+          "
 
       - name: build client schema
         run: bun run --cwd packages/client build:schema
 
       - name: build client
         run: bun run --cwd packages/client build
-
-      - name: stage release package
-        run: bun run scripts/stage-vellum-libs-release.ts "$VERSION"
 
       - name: configure npm auth
         env:
@@ -84,32 +91,18 @@ jobs:
             exit 1
           fi
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$HOME/.npmrc"
-
-      - name: verify npm publish access
-        run: |
-          set -euo pipefail
-          echo "npm user: $(npm whoami)"
-          (cd release/vellum-client && npm publish --access public --tag "$NPM_TAG" --dry-run)
+          echo "NPM_CONFIG_TOKEN=${NPM_TOKEN}" >> "$GITHUB_ENV"
 
       - name: publish client
-        working-directory: release/vellum-client
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          set -euo pipefail
           if [ "$DRY_RUN" = "true" ]; then
-            npm publish --access public --tag "$NPM_TAG" --dry-run
+            bun run scripts/publish-client.ts --dry-run --tag "$NPM_TAG"
           else
-            npm publish --access public --tag "$NPM_TAG"
+            bun run scripts/publish-client.ts --tag "$NPM_TAG"
           fi
-
-      - name: bump source version
-        if: ${{ inputs.dry_run == false }}
-        run: |
-          node -e "
-            const fs = require('node:fs');
-            const p = 'packages/client/package.json';
-            const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
-            pkg.version = process.env.VERSION;
-            fs.writeFileSync(p, JSON.stringify(pkg, null, 2) + '\n');
-          "
 
       - name: commit version bump
         if: ${{ inputs.dry_run == false }}
