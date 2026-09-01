@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
-    "@khoralabs/agent-review": "0.2.0",
+    "@khoralabs/agent-review": "0.2.1",
     "@types/bun": "latest",
     "husky": "^9.1.7",
     "typescript": "^5"

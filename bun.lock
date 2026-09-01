@@ -6,7 +6,7 @@
       "name": "@khoralabs/vellum",
       "devDependencies": {
         "@biomejs/biome": "^2.4.10",
-        "@khoralabs/agent-review": "0.2.0",
+        "@khoralabs/agent-review": "0.2.1",
         "@types/bun": "latest",
         "husky": "^9.1.7",
         "typescript": "^5",
@@ -163,7 +163,7 @@
 
     "@khoralabs/agent-capabilities-otel": ["@khoralabs/agent-capabilities-otel@0.2.0", "", { "dependencies": { "@khoralabs/agent-capabilities": "^0.1.1", "@opentelemetry/api": "^1.9.0", "pino": "^9.6.0" }, "peerDependencies": { "typescript": "^5" } }, "sha512-hv1SDJhLel/iR3WEfkkzC9/hDc+hbxFWuwMmiW89kk1G8USeeJuESMYPx5pM7vHoYz90DSJqYfolwxyngiXFGA=="],
 
-    "@khoralabs/agent-review": ["@khoralabs/agent-review@0.2.0", "", { "dependencies": { "@khoralabs/agent-capabilities": "^0.2.0", "@khoralabs/agent-capabilities-ai-sdk": "^0.2.0", "@khoralabs/agent-capabilities-otel": "^0.2.0", "@opentelemetry/api": "^1.9.1", "ai": "^7.0.9", "just-bash": "^3.2.0", "pino": "^9", "yaml": "^2.8.0", "zod": "^4.4.3" }, "bin": { "agent-review": "bin/agent-review" } }, "sha512-JwCthQ39eDdGoSzeRcbgkV/c6py5J02i5fiBqz8q9R7dvY4GhIQy5ajHy0mgNHVbeebvWcAl4NYWqTnQ9XX+MQ=="],
+    "@khoralabs/agent-review": ["@khoralabs/agent-review@0.2.1", "", { "dependencies": { "@khoralabs/agent-capabilities": "^0.2.0", "@khoralabs/agent-capabilities-ai-sdk": "^0.2.0", "@khoralabs/agent-capabilities-otel": "^0.2.0", "@opentelemetry/api": "^1.9.1", "ai": "^7.0.9", "just-bash": "^3.2.0", "pino": "^9", "yaml": "^2.8.0", "zod": "^4.4.3" }, "bin": { "agent-review": "bin/agent-review" } }, "sha512-VikBx4aYWyciBZKmYBd0g/I2MzebpTkMinmmtjh5WEn+yMqFnL8fxy1L2w4+DQ/1QEwbdEgCmzq3hsvFknnqvQ=="],
 
     "@khoralabs/cli-kit": ["@khoralabs/cli-kit@workspace:vendor/libs/packages/cli-kit"],
 
