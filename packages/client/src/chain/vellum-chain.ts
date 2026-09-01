@@ -1,10 +1,6 @@
-import type { JsonDocument } from "@khoralabs/obp-core";
 import {
   type ContinueTurn,
-  continueTurnSchemaForPorts,
   type HostTurnBody,
-  hostTurnToNbcBody,
-  isLeaveTurn,
   isNbcTurnBody,
   isOpeningTurn,
   type LeaveTurn,
@@ -12,9 +8,9 @@ import {
   type NbcChainPortRow,
   type ObpStandardSchema,
   type OpeningTurn,
-  openingTurnSchema,
   serializeNbcTurnBodyForWire,
 } from "@khoralabs/obp-nbc";
+import { availablePeerPorts, negotiationOutputToWire } from "@khoralabs/obp-nbc/host";
 
 import type { VellumClient } from "../vellum-client";
 
@@ -39,7 +35,9 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function asRecord(body: HostTurnBody | Record<string, unknown>): Record<string, unknown> {
+function asRecord(
+  body: OpeningTurn | ContinueTurn | LeaveTurn | Record<string, unknown>,
+): Record<string, unknown> {
   return body as Record<string, unknown>;
 }
 
@@ -57,9 +55,15 @@ export class VellumChain {
     let genesisTurn: Record<string, unknown> | undefined;
     if (opts.genesisTurn !== undefined) {
       if (isOpeningTurn(opts.genesisTurn as HostTurnBody)) {
-        genesisTurn = serializeNbcTurnBodyForWire(
-          hostTurnToNbcBody(opts.genesisTurn as OpeningTurn, "opening"),
-        );
+        const wired = negotiationOutputToWire({
+          raw: opts.genesisTurn,
+          opening: true,
+          peerPorts: [],
+        });
+        if (wired.kind !== "offer") {
+          throw new Error("genesis turn must not disconnect");
+        }
+        genesisTurn = wired.body;
       } else {
         genesisTurn = opts.genesisTurn as Record<string, unknown>;
       }
@@ -116,38 +120,22 @@ export class VellumChain {
     body: OpeningTurn | ContinueTurn | LeaveTurn | Record<string, unknown>,
   ): Promise<void> {
     const raw = asRecord(body);
-    if (raw.disconnect === true || isLeaveTurn(body as HostTurnBody)) {
-      await this.client.endOffers(this.sessionId);
-      return;
-    }
     if (isNbcTurnBody(raw)) {
       await this.client.sendTurn(this.sessionId, serializeNbcTurnBodyForWire(raw));
       return;
     }
     const snap = await this.snapshot();
-    if (snap.graph.offers.length === 0) {
-      const result = openingTurnSchema["~standard"].validate(raw);
-      if ("issues" in result && result.issues) {
-        throw new Error(result.issues.map((i) => i.message).join("; "));
-      }
-      if (!("value" in result)) throw new Error("opening turn validation failed");
-      const wire = serializeNbcTurnBodyForWire(hostTurnToNbcBody(result.value, "opening"));
-      await this.client.sendTurn(this.sessionId, wire);
+    const myDid = await this.client.actorDid();
+    const wired = negotiationOutputToWire({
+      raw: body,
+      opening: snap.graph.offers.length === 0,
+      peerPorts: availablePeerPorts(snap.graph, myDid),
+    });
+    if (wired.kind === "disconnect") {
+      await this.client.endOffers(this.sessionId);
       return;
     }
-    const schema = continueTurnSchemaForPorts(
-      snap.portsICanBind.map((p) => ({
-        id: p.id,
-        bind_policy: (p.bind_policy ?? null) as JsonDocument | null,
-      })),
-    );
-    const result = schema["~standard"].validate(raw);
-    if ("issues" in result && result.issues) {
-      throw new Error(result.issues.map((i) => i.message).join("; "));
-    }
-    if (!("value" in result)) throw new Error("continue turn validation failed");
-    const wire = serializeNbcTurnBodyForWire(hostTurnToNbcBody(result.value, "step"));
-    await this.client.sendTurn(this.sessionId, wire);
+    await this.client.sendTurn(this.sessionId, wired.body);
   }
 
   async close(): Promise<void> {

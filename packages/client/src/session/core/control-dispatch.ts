@@ -1,5 +1,4 @@
 import {
-  availablePortsFor,
   collectNbcChainGraph,
   type NbcChainGraph,
   type NbcChainPortRow,
@@ -7,6 +6,7 @@ import {
   parseNbcTurnBody,
   whoShouldAct,
 } from "@khoralabs/obp-nbc";
+import { availablePeerPorts } from "@khoralabs/obp-nbc/host";
 import { normalizeSessionInit, sessionInitFromWire } from "@khoralabs/obp-wire";
 import {
   ChainInitRequestSchema,
@@ -66,7 +66,11 @@ export async function buildChainSnapshot(
 }> {
   const graph = await collectNbcChainGraph(persistence);
   const acting = whoShouldAct(graph, { initiatorId });
-  const portsICanBind = availablePortsFor(asDid, graph);
+  const peerPorts = availablePeerPorts(graph, asDid);
+  const portById = new Map(graph.ports.map((p) => [p.id, p]));
+  const portsICanBind = peerPorts
+    .map((pp) => portById.get(pp.id))
+    .filter((row): row is NbcChainPortRow => row !== undefined);
   const needsTurn = acting === asDid;
   return {
     session_id: sessionId,

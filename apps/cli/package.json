@@ -13,7 +13,7 @@
   "dependencies": {
     "@khoralabs/did-key-identity": "^0.1.0",
     "@khoralabs/cli-kit": "workspace:*",
-    "@khoralabs/obp-nbc": "^0.2.0",
+    "@khoralabs/obp-nbc": "^0.2.1",
     "@khoralabs/vellum-client": "workspace:*"
   },
   "devDependencies": {

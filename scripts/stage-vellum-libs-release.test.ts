@@ -30,9 +30,9 @@ describe("stage vellum libs helpers", () => {
     expect(deps["@khoralabs/vellum-contracts"]).toBeUndefined();
     expect(deps["better-sqlite3"]).toBeUndefined();
     expect(deps["@khoralabs/did-key-identity"]).toBe("^0.1.0");
-    expect(deps["@khoralabs/obp-core"]).toBe("^0.2.0");
-    expect(deps["@khoralabs/obp-nbc"]).toBe("^0.2.0");
-    expect(deps["@khoralabs/obp-wire"]).toBe("^0.2.0");
+    expect(deps["@khoralabs/obp-core"]).toBe("^0.2.1");
+    expect(deps["@khoralabs/obp-nbc"]).toBe("^0.2.1");
+    expect(deps["@khoralabs/obp-wire"]).toBe("^0.2.1");
     expect(deps["@khoralabs/relay"]).toBe("^0.1.1");
     expect(deps.zod).toBe("^4");
   });

@@ -9,12 +9,8 @@ import {
   type PersistableSigner,
 } from "@khoralabs/did-key-identity";
 import type { JsonDocument } from "@khoralabs/obp-core";
-import {
-  continueTurnSchemaForPorts,
-  type ObpStandardSchema,
-  openingTurnSchema,
-} from "@khoralabs/obp-nbc";
 import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
+import { availablePeerPorts, negotiationTurnEnvelopeSchema } from "@khoralabs/obp-nbc/host";
 import { RelayClient } from "@khoralabs/relay/client";
 import type { RelaySessionQuota } from "@khoralabs/relay/contracts";
 import { base64UrlToBytes } from "@khoralabs/relay/crypto";
@@ -199,6 +195,11 @@ export class VellumClient {
       keyPath: this.opts.keyPath,
       identitySecret: this.opts.identitySecret,
     });
+  }
+
+  /** DID of the local actor (identity signer). */
+  async actorDid(): Promise<string> {
+    return (await this.resolveSigner()).did;
   }
 
   private controlBaseUrl(): string {
@@ -451,15 +452,12 @@ export class VellumClient {
       throw new Error(httpFailMessage(res.statusText, j));
     }
     const snap = j as Omit<ChainSnapshot, "schema">;
-    const schema: ObpStandardSchema =
-      snap.graph.offers.length === 0
-        ? openingTurnSchema
-        : continueTurnSchemaForPorts(
-            snap.portsICanBind.map((p) => ({
-              id: p.id,
-              bind_policy: (p.bind_policy ?? null) as JsonDocument | null,
-            })),
-          );
+    const myDid = await this.actorDid();
+    const peerPorts = availablePeerPorts(snap.graph, myDid);
+    const schema = negotiationTurnEnvelopeSchema({
+      opening: snap.graph.offers.length === 0,
+      peerPorts,
+    });
     return { ...snap, schema };
   }
 

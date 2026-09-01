@@ -38,9 +38,9 @@ export function stagedDependencies(
 ): Record<string, string> {
   return {
     "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "^0.2.0",
-    "@khoralabs/obp-nbc": "^0.2.0",
-    "@khoralabs/obp-wire": "^0.2.0",
+    "@khoralabs/obp-core": "^0.2.1",
+    "@khoralabs/obp-nbc": "^0.2.1",
+    "@khoralabs/obp-wire": "^0.2.1",
     "@khoralabs/relay": "^0.1.1",
     zod: "^4",
   };
