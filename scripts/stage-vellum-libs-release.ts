@@ -28,6 +28,7 @@ export function stagedClientExports(): Record<string, unknown> {
     "./persistence": entry("persistence/core/index"),
     "./sqlite": entry("persistence/sqlite/index"),
     "./pool": entry("pool/index"),
+    "./pool/host": entry("pool/host"),
     "./vellum-config.schema.json": "./vellum-config.schema.json",
   };
 }
