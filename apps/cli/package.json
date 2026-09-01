@@ -11,16 +11,16 @@
     "start": "bun run ./src/cli.ts"
   },
   "dependencies": {
-    "@khoralabs/did-key-identity": "^0.1.0",
+    "@khoralabs/did-key-identity": "catalog:",
     "@khoralabs/cli-kit": "workspace:*",
-    "@khoralabs/obp-nbc": "^0.2.1",
+    "@khoralabs/obp-nbc": "catalog:",
     "@khoralabs/vellum-client": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:"
   }
 }

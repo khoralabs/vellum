@@ -3,6 +3,8 @@
  * Stage @khoralabs/vellum-client under release/ for npm publish (outside Bun workspaces).
  * JS is bundled with OBP/relay left external (`scripts/build.ts`); those packages
  * must be declared as published dependencies so consumers can resolve them.
+ *
+ * Source workspace deps may use `catalog:`; staged package.json gets concrete ranges.
  */
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -13,6 +15,80 @@ export type VellumLibPackage = (typeof VELLUM_LIB_PACKAGES)[number];
 const PKG_DIR: Record<VellumLibPackage, string> = {
   "vellum-client": "packages/client",
 };
+
+type RootPackageJson = {
+  catalog?: Record<string, string>;
+  catalogs?: Record<string, Record<string, string>>;
+  workspaces?:
+    | string[]
+    | {
+        packages?: string[];
+        catalog?: Record<string, string>;
+        catalogs?: Record<string, Record<string, string>>;
+      };
+};
+
+/** Load default + named catalogs from root package.json. */
+export function loadWorkspaceCatalogs(workspaceRoot: string): {
+  defaultCatalog: Record<string, string>;
+  named: Record<string, Record<string, string>>;
+} {
+  const root = JSON.parse(
+    readFileSync(path.join(workspaceRoot, "package.json"), "utf8"),
+  ) as RootPackageJson;
+  const ws = root.workspaces;
+  const fromWorkspaces =
+    ws !== undefined && !Array.isArray(ws)
+      ? {
+          catalog: ws.catalog ?? {},
+          catalogs: ws.catalogs ?? {},
+        }
+      : { catalog: {}, catalogs: {} };
+  return {
+    defaultCatalog: { ...fromWorkspaces.catalog, ...(root.catalog ?? {}) },
+    named: { ...fromWorkspaces.catalogs, ...(root.catalogs ?? {}) },
+  };
+}
+
+/** Resolve a single dep version; `catalog:` / `catalog:<name>` → concrete range. */
+export function resolveCatalogVersion(
+  depName: string,
+  version: string,
+  catalogs: {
+    defaultCatalog: Record<string, string>;
+    named: Record<string, Record<string, string>>;
+  },
+): string {
+  if (!version.startsWith("catalog:")) return version;
+  const catalogName = version.slice("catalog:".length).trim();
+  const table =
+    catalogName === "" || catalogName === "default"
+      ? catalogs.defaultCatalog
+      : catalogs.named[catalogName];
+  if (table === undefined) {
+    throw new Error(`unknown catalog "${catalogName || "default"}" for ${depName}`);
+  }
+  const resolved = table[depName];
+  if (resolved === undefined || resolved.trim() === "") {
+    throw new Error(`catalog missing ${depName} (catalog:${catalogName || ""})`);
+  }
+  return resolved;
+}
+
+export function resolveDependencyMap(
+  deps: Record<string, string> | undefined,
+  catalogs: {
+    defaultCatalog: Record<string, string>;
+    named: Record<string, Record<string, string>>;
+  },
+): Record<string, string> {
+  if (deps === undefined) return {};
+  const out: Record<string, string> = {};
+  for (const [name, version] of Object.entries(deps)) {
+    out[name] = resolveCatalogVersion(name, version, catalogs);
+  }
+  return out;
+}
 
 export function stagedClientExports(): Record<string, unknown> {
   const entry = (base: string) => ({
@@ -33,18 +109,16 @@ export function stagedClientExports(): Record<string, unknown> {
   };
 }
 
+/** Published runtime deps from source package.json with catalog: resolved. */
 export function stagedDependencies(
-  _pkg: VellumLibPackage,
-  _version: string,
+  workspaceRoot: string,
+  pkg: VellumLibPackage,
 ): Record<string, string> {
-  return {
-    "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "^0.2.1",
-    "@khoralabs/obp-nbc": "^0.2.1",
-    "@khoralabs/obp-wire": "^0.2.1",
-    "@khoralabs/relay": "^0.1.1",
-    zod: "^4",
+  const pkgDir = path.join(workspaceRoot, PKG_DIR[pkg]);
+  const source = JSON.parse(readFileSync(path.join(pkgDir, "package.json"), "utf8")) as {
+    dependencies?: Record<string, string>;
   };
+  return resolveDependencyMap(source.dependencies, loadWorkspaceCatalogs(workspaceRoot));
 }
 
 export async function stageVellumLibsRelease(opts: {
@@ -52,6 +126,7 @@ export async function stageVellumLibsRelease(opts: {
   version: string;
 }): Promise<{ releaseRoot: string; packages: string[] }> {
   const { workspaceRoot, version } = opts;
+  const catalogs = loadWorkspaceCatalogs(workspaceRoot);
   const releaseRoot = path.join(workspaceRoot, "release");
   if (existsSync(releaseRoot)) rmSync(releaseRoot, { recursive: true, force: true });
   mkdirSync(releaseRoot, { recursive: true });
@@ -80,6 +155,10 @@ export async function stageVellumLibsRelease(opts: {
       string,
       unknown
     >;
+    const peerDependencies = resolveDependencyMap(
+      source.peerDependencies as Record<string, string> | undefined,
+      catalogs,
+    );
     const staged: Record<string, unknown> = {
       name: source.name,
       version,
@@ -95,8 +174,8 @@ export async function stageVellumLibsRelease(opts: {
       main: "./dist/index.js",
       types: "./dist/index.d.ts",
       exports: stagedClientExports(),
-      dependencies: stagedDependencies(name, version),
-      peerDependencies: source.peerDependencies,
+      dependencies: stagedDependencies(workspaceRoot, name),
+      peerDependencies,
       publishConfig: { access: "public" },
     };
     writeFileSync(path.join(releaseDir, "package.json"), `${JSON.stringify(staged, null, 2)}\n`);

@@ -2,11 +2,23 @@
   "name": "@khoralabs/vellum",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "vendor/libs/packages/*/**"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "vendor/libs/packages/*/**"
+    ],
+    "catalog": {
+      "@khoralabs/did-key-identity": "^0.1.0",
+      "@khoralabs/obp-core": "^0.2.1",
+      "@khoralabs/obp-nbc": "^0.2.1",
+      "@khoralabs/obp-wire": "^0.2.1",
+      "@khoralabs/relay": "^0.1.1",
+      "@types/bun": "latest",
+      "typescript": "^5",
+      "zod": "^4"
+    }
+  },
   "scripts": {
     "format": "biome check --write .",
     "format:check": "biome check .",
@@ -20,8 +32,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
     "@khoralabs/agent-review": "0.2.1",
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "husky": "^9.1.7",
-    "typescript": "^5"
+    "typescript": "catalog:"
   }
 }

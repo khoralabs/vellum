@@ -87,19 +87,19 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@khoralabs/relay": "^0.1.1",
-    "@khoralabs/did-key-identity": "^0.1.0",
-    "@khoralabs/obp-core": "^0.2.1",
-    "@khoralabs/obp-nbc": "^0.2.1",
-    "@khoralabs/obp-wire": "^0.2.1",
-    "zod": "^4"
+    "@khoralabs/relay": "catalog:",
+    "@khoralabs/did-key-identity": "catalog:",
+    "@khoralabs/obp-core": "catalog:",
+    "@khoralabs/obp-nbc": "catalog:",
+    "@khoralabs/obp-wire": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"
