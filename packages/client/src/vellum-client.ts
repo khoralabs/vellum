@@ -13,7 +13,7 @@ import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
 import { availablePeerPorts, negotiationTurnEnvelopeSchema } from "@khoralabs/obp-nbc/host";
 import { RelayClient } from "@khoralabs/relay/client";
 import type { RelaySessionQuota } from "@khoralabs/relay/contracts";
-import { base64UrlToBytes } from "@khoralabs/relay/crypto";
+import { base64UrlToBytes } from "@khoralabs/relay/crypto/encoding";
 import {
   fetchKeyPackageHttp,
   generateRouteHandle,
