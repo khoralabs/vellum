@@ -132,7 +132,7 @@ Discriminated policy — one mode per channel:
 | POST | `/v1/channels/:id/ticket` | Mint ticket + upgrade nonce (member) |
 | POST | `/v1/channels/:id/ws-nonce` | Mint upgrade nonce only (member) |
 | GET | `/v1/channels/:id/ws` | Multiplex attach (`Sec-WebSocket-Protocol: vellum.nonce.<nonce>`) |
-| GET | `/health` | Liveness |
+| GET | `/health` | Liveness — JSON `{ ok: true, version: 1 }` |
 
 ---
 
