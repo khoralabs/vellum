@@ -13,7 +13,11 @@ import {
   type ChainInitResponse,
   type ChainStateResponse,
   EndOffersRequestSchema,
+  matchVellumControlChainSnapshotPath,
   TurnRequestSchema,
+  VELLUM_CONTROL_HTTP_PATH,
+  VELLUM_CONTROL_PROTOCOL_VERSION,
+  vellumJsonError,
 } from "../../contracts";
 import type {
   CreateVellumControlDispatchOptions,
@@ -95,11 +99,11 @@ export function createVellumControlDispatch(
 
   return async (req) => {
     const url = new URL(req.url);
-    if (req.method === "GET" && url.pathname === "/health") {
-      return new Response(null, { status: 204 });
+    if (req.method === "GET" && url.pathname === VELLUM_CONTROL_HTTP_PATH.health) {
+      return Response.json({ ok: true as const, version: VELLUM_CONTROL_PROTOCOL_VERSION });
     }
 
-    if (req.method === "GET" && url.pathname === "/events") {
+    if (req.method === "GET" && url.pathname === VELLUM_CONTROL_HTTP_PATH.events) {
       const encoder = new TextEncoder();
       let onEvent: (e: VellumControlEvent) => void = () => {};
       const stream = new ReadableStream<Uint8Array>({
@@ -121,7 +125,7 @@ export function createVellumControlDispatch(
       });
     }
 
-    if (req.method === "GET" && url.pathname === "/chain") {
+    if (req.method === "GET" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chain) {
       const rows = meta.listChains();
       const chains = rows.map((r) => ({
         session_id: r.session_id,
@@ -137,12 +141,12 @@ export function createVellumControlDispatch(
       return Response.json(payload);
     }
 
-    const chainSnap = url.pathname.match(/^\/chain\/([^/]+)$/);
-    if (req.method === "GET" && chainSnap !== null && chainSnap[1] !== undefined) {
-      const sessionId = decodeURIComponent(chainSnap[1]);
+    const chainSessionId = matchVellumControlChainSnapshotPath(url.pathname);
+    if (req.method === "GET" && chainSessionId !== undefined) {
+      const sessionId = chainSessionId;
       const row = meta.getChain(sessionId);
       if (row === undefined && !state.handles.has(sessionId)) {
-        return Response.json({ error: `unknown session: ${sessionId}` }, { status: 404 });
+        return vellumJsonError(`unknown session: ${sessionId}`, 404);
       }
       try {
         const stored = row?.initiator_did?.trim();
@@ -154,31 +158,25 @@ export function createVellumControlDispatch(
         return Response.json(snap);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        return Response.json({ error: msg }, { status: 400 });
+        return vellumJsonError(msg, 400);
       }
     }
 
-    if (req.method === "POST" && url.pathname === "/chain/end-offers") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chainEndOffers) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
           body = await req.json();
         } catch {
-          return Response.json({ error: "invalid json" }, { status: 400 });
+          return vellumJsonError("invalid json", 400);
         }
         const parsed = EndOffersRequestSchema.safeParse(body);
         if (!parsed.success) {
-          return Response.json(
-            { error: "bad request", detail: parsed.error.flatten() },
-            { status: 400 },
-          );
+          return vellumJsonError("bad request", 400, { detail: parsed.error.flatten() });
         }
         const handle = state.handles.get(parsed.data.sessionId);
         if (handle === undefined) {
-          return Response.json(
-            { error: `unknown session: ${parsed.data.sessionId}` },
-            { status: 404 },
-          );
+          return vellumJsonError(`unknown session: ${parsed.data.sessionId}`, 404);
         }
         try {
           await handle.endOffers();
@@ -186,32 +184,26 @@ export function createVellumControlDispatch(
           return Response.json({ ok: true as const });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          return Response.json({ error: msg }, { status: 400 });
+          return vellumJsonError(msg, 400);
         }
       });
     }
 
-    if (req.method === "POST" && url.pathname === "/chain/close") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chainClose) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
           body = await req.json();
         } catch {
-          return Response.json({ error: "invalid json" }, { status: 400 });
+          return vellumJsonError("invalid json", 400);
         }
         const parsed = EndOffersRequestSchema.safeParse(body);
         if (!parsed.success) {
-          return Response.json(
-            { error: "bad request", detail: parsed.error.flatten() },
-            { status: 400 },
-          );
+          return vellumJsonError("bad request", 400, { detail: parsed.error.flatten() });
         }
         const handle = state.handles.get(parsed.data.sessionId);
         if (handle === undefined) {
-          return Response.json(
-            { error: `unknown session: ${parsed.data.sessionId}` },
-            { status: 404 },
-          );
+          return vellumJsonError(`unknown session: ${parsed.data.sessionId}`, 404);
         }
         try {
           await handle.terminate("closed");
@@ -219,34 +211,31 @@ export function createVellumControlDispatch(
           return Response.json({ ok: true as const });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          return Response.json({ error: msg }, { status: 400 });
+          return vellumJsonError(msg, 400);
         }
       });
     }
 
-    if (req.method === "POST" && url.pathname === "/chain/init") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chainInit) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
           body = await req.json();
         } catch {
-          return Response.json({ error: "invalid json" }, { status: 400 });
+          return vellumJsonError("invalid json", 400);
         }
         const parsed = ChainInitRequestSchema.safeParse(body);
         if (!parsed.success) {
-          return Response.json(
-            { error: "bad request", detail: parsed.error.flatten() },
-            { status: 400 },
-          );
+          return vellumJsonError("bad request", 400, { detail: parsed.error.flatten() });
         }
         if (isSessionAllocated !== undefined) {
           const allocated = await Promise.resolve(isSessionAllocated(parsed.data.init.session_id));
           if (!allocated) {
-            return Response.json({ error: "session slot not allocated on relay" }, { status: 409 });
+            return vellumJsonError("session slot not allocated on relay", 409);
           }
         }
         if (state.conn === undefined) {
-          return Response.json({ error: "multiplex not ready" }, { status: 503 });
+          return vellumJsonError("multiplex not ready", 503);
         }
         const wi = parsed.data.init;
         let genesisNb: NbcTurnBody | undefined;
@@ -255,7 +244,7 @@ export function createVellumControlDispatch(
             genesisNb = parseGenesisTurnOrThrow(parsed.data.genesis_turn);
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
-            return Response.json({ error: msg }, { status: 400 });
+            return vellumJsonError(msg, 400);
           }
         }
 
@@ -293,30 +282,27 @@ export function createVellumControlDispatch(
           return Response.json(out);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          return Response.json({ error: msg }, { status: 400 });
+          return vellumJsonError(msg, 400);
         }
       });
     }
 
-    if (req.method === "POST" && url.pathname === "/turn") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.turn) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
           body = await req.json();
         } catch {
-          return Response.json({ error: "invalid json" }, { status: 400 });
+          return vellumJsonError("invalid json", 400);
         }
         const parsed = TurnRequestSchema.safeParse(body);
         if (!parsed.success) {
-          return Response.json(
-            { error: "bad request", detail: parsed.error.flatten() },
-            { status: 400 },
-          );
+          return vellumJsonError("bad request", 400, { detail: parsed.error.flatten() });
         }
         const { sessionId, body: turnBody } = parsed.data;
         const handle = state.handles.get(sessionId);
         if (handle === undefined) {
-          return Response.json({ error: `unknown session: ${sessionId}` }, { status: 404 });
+          return vellumJsonError(`unknown session: ${sessionId}`, 404);
         }
         try {
           const nb = parseNbcTurnBody(turnBody);
@@ -325,11 +311,11 @@ export function createVellumControlDispatch(
           return Response.json({ ok: true as const });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          return Response.json({ error: msg }, { status: 400 });
+          return vellumJsonError(msg, 400);
         }
       });
     }
 
-    return Response.json({ error: "not found" }, { status: 404 });
+    return vellumJsonError("not found", 404);
   };
 }

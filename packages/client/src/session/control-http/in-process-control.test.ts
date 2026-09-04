@@ -22,7 +22,8 @@ describe("InProcessControlTransport", () => {
     });
     const transport = new InProcessControlTransport(dispatch);
     const res = await transport.fetch("/health");
-    expect(res.status).toBe(204);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, version: 1 });
     db.close();
   });
 
