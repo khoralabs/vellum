@@ -32,7 +32,7 @@ Shared by HTTP serve and in-process dispatch:
 
 | Method | Path | Role |
 |--------|------|------|
-| `GET` | `/health` | Liveness (`204`) |
+| `GET` | `/health` | Liveness (`200` JSON `{ ok: true, version: 1 }`) |
 | `GET` | `/chain` | Chain list + OBP graph summary counts |
 | `GET` | `/chain/:sessionId` | Graph snapshot: `whoShouldAct`, `portsICanBind`, `needsTurn` |
 | `GET` | `/events` | SSE: `committed` / `graph-advanced` / `your-turn` |

@@ -1,5 +1,7 @@
 /** Control-plane HTTP path constants shared by dispatch and VellumClient. */
 
+import { z } from "zod";
+
 export const VELLUM_CONTROL_HTTP_PATH = {
   health: "/health",
   events: "/events",
@@ -11,6 +13,16 @@ export const VELLUM_CONTROL_HTTP_PATH = {
 } as const;
 
 export type VellumControlHttpPathKey = keyof typeof VELLUM_CONTROL_HTTP_PATH;
+
+/** Protocol version advertised on `GET /health`. */
+export const VELLUM_CONTROL_PROTOCOL_VERSION = 1 as const;
+
+export const zVellumControlHealth = z.object({
+  ok: z.literal(true),
+  version: z.literal(VELLUM_CONTROL_PROTOCOL_VERSION),
+});
+
+export type VellumControlHealth = z.infer<typeof zVellumControlHealth>;
 
 export function vellumControlChainByIdPath(sessionId: string): string {
   return `${VELLUM_CONTROL_HTTP_PATH.chain}/${encodeURIComponent(sessionId)}`;

@@ -31,10 +31,13 @@ import {
   channelSqlitePath,
   VELLUM_CONTROL_HTTP_PATH,
   type VellumChainRow,
+  type VellumErrorCode,
   type VellumOfferRow,
   type VellumPathConfig,
   type VellumPortRow,
   vellumControlChainByIdPath,
+  vellumErrorCodeForStatus,
+  zVellumErrorCode,
 } from "./contracts";
 import { readVellumControlFile, removeVellumControlFile } from "./control-file";
 import { requireVellumIdentity } from "./identity";
@@ -168,11 +171,41 @@ function daemonSpawnCmd(): string[] {
   return ["bun", "run", entry];
 }
 
-function httpFailMessage(statusText: string, j: unknown): string {
-  if (typeof j === "object" && j !== null && "error" in j) {
-    return String((j as { error: unknown }).error);
+export class VellumClientError extends Error {
+  readonly status: number;
+  readonly code?: VellumErrorCode;
+  readonly bodyText?: string;
+
+  constructor(message: string, status: number, bodyText?: string, code?: VellumErrorCode) {
+    super(message);
+    this.name = "VellumClientError";
+    this.status = status;
+    this.bodyText = bodyText;
+    if (code !== undefined) this.code = code;
   }
-  return statusText;
+}
+
+function throwFromFailedControlResponse(status: number, statusText: string, j: unknown): never {
+  let message = statusText.length > 0 ? statusText : `Request failed with status ${status}`;
+  let code: VellumErrorCode | undefined;
+  let bodyText: string | undefined;
+  if (typeof j === "object" && j !== null) {
+    bodyText = JSON.stringify(j);
+    const rec = j as { error?: unknown; code?: unknown };
+    if (typeof rec.error === "string" && rec.error.length > 0) message = rec.error;
+    const parsed = zVellumErrorCode.safeParse(rec.code);
+    if (parsed.success) code = parsed.data;
+  }
+  throw new VellumClientError(message, status, bodyText, code ?? vellumErrorCodeForStatus(status));
+}
+
+/** @internal Exported for unit tests. */
+export function throwFromFailedControlResponseForTest(
+  status: number,
+  statusText: string,
+  j: unknown,
+): never {
+  return throwFromFailedControlResponse(status, statusText, j);
 }
 
 export class VellumClient {
@@ -392,7 +425,7 @@ export class VellumClient {
       });
       const j: unknown = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(httpFailMessage(res.statusText, j));
+        throwFromFailedControlResponse(res.status, res.statusText, j);
       }
       return ChainInitResponseSchema.parse(j);
     } catch (e) {
@@ -419,7 +452,7 @@ export class VellumClient {
     });
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new Error(httpFailMessage(res.statusText, j));
+      throwFromFailedControlResponse(res.status, res.statusText, j);
     }
   }
 
@@ -431,7 +464,7 @@ export class VellumClient {
     });
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new Error(httpFailMessage(res.statusText, j));
+      throwFromFailedControlResponse(res.status, res.statusText, j);
     }
   }
 
@@ -443,7 +476,7 @@ export class VellumClient {
     });
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new Error(httpFailMessage(res.statusText, j));
+      throwFromFailedControlResponse(res.status, res.statusText, j);
     }
   }
 
@@ -451,7 +484,7 @@ export class VellumClient {
     const res = await this.control().fetch(vellumControlChainByIdPath(sessionId));
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new Error(httpFailMessage(res.statusText, j));
+      throwFromFailedControlResponse(res.status, res.statusText, j);
     }
     const snap = j as Omit<ChainSnapshot, "schema">;
     const myDid = await this.actorDid();
@@ -467,7 +500,7 @@ export class VellumClient {
     const res = await this.control().fetch(VELLUM_CONTROL_HTTP_PATH.chain);
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new Error(httpFailMessage(res.statusText, j));
+      throwFromFailedControlResponse(res.status, res.statusText, j);
     }
     return ChainStateResponseSchema.parse(j);
   }

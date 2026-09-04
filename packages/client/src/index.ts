@@ -37,6 +37,7 @@ export {
 } from "./transport";
 export {
   VellumClient,
+  VellumClientError,
   type VellumClientOptions,
   type VellumConnectResult,
 } from "./vellum-client";
