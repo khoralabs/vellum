@@ -8,8 +8,8 @@ import { createObpSqlitePersistenceClient, openObpDatabase } from "@khoralabs/ob
 import { collectNbcChainGraph, validateBindPolicyAtExpose, whoShouldAct } from "@khoralabs/obp-nbc";
 import { validateNbcBindPayloadForPort } from "@khoralabs/obp-nbc/bind-policy";
 import { RelayClient } from "@khoralabs/relay/client";
-import { base64UrlToBytes } from "@khoralabs/relay/crypto";
-import { fetchMlsWelcomeHttp, MlsGroupSession } from "@khoralabs/relay/mls";
+import { base64UrlToBytes } from "@khoralabs/relay/crypto/encoding";
+import { fetchMlsWelcomeHttp, KeyPackageManager, MlsGroupSession } from "@khoralabs/relay/mls";
 import { cfgDataDir, channelSqlitePath, type VellumPathConfig } from "../../contracts";
 import {
   readVellumControlFile,
@@ -100,7 +100,7 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
 
   void (async () => {
     let db: ReturnType<typeof openObpDatabase> | undefined;
-    let kpm: ReturnType<RelayClient["createKeyPackageManager"]> | undefined;
+    let kpm: KeyPackageManager | undefined;
 
     try {
       const sqlitePath = channelSqlitePath(cfgDataDir(opts.cfg), opts.channelId);
@@ -141,7 +141,12 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
         signer: opts.signer,
       });
 
-      kpm = channelClient.createKeyPackageManager(frameSigner.did, ed25519PrivKey);
+      kpm = new KeyPackageManager({
+        relayBaseUrl: opts.relayBaseUrl,
+        signer: opts.signer,
+        myDid: frameSigner.did,
+        ed25519PrivateKey: ed25519PrivKey,
+      });
       const keyPackageManager = kpm;
       await keyPackageManager.replenishIfNeeded();
       if (ac.signal.aborted) {

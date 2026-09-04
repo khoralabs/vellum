@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { RelayClientError } from "@khoralabs/relay/client";
+import { RelayClientError } from "@khoralabs/relay/client/errors";
 import { VellumClientError } from "./client-error";
 import { VELLUM_ERROR_CODE } from "./contracts/control-errors";
 import {
