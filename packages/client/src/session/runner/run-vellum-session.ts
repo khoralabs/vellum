@@ -18,6 +18,7 @@ import {
 } from "../../control-file";
 import type { VellumPersistence } from "../../persistence/core/types";
 import { createVellumPersistence } from "../../persistence/sqlite/vellum-persistence";
+import { withRelayClientErrors } from "../../relay-client-errors";
 import { InProcessControlTransport, type VellumControlTransport } from "../../transport";
 import { startVellumControlServer } from "../control-http";
 import type { ChannelFabric, VellumControlServerState } from "../core";
@@ -213,11 +214,13 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
 
               if (peerParty !== undefined && !skipMls) {
                 try {
-                  const fetched = await fetchMlsWelcomeHttp(
-                    opts.relayBaseUrl,
-                    opts.signer,
-                    opts.channelId,
-                    handle.sessionId,
+                  const fetched = await withRelayClientErrors(() =>
+                    fetchMlsWelcomeHttp(
+                      opts.relayBaseUrl,
+                      opts.signer,
+                      opts.channelId,
+                      handle.sessionId,
+                    ),
                   );
                   const welcomeBytes = base64UrlToBytes(fetched.welcome);
                   const stored = await keyPackageManager.listStoredKeyPackages();
@@ -310,8 +313,12 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
         async (conn, getFrameCount) => {
           state.conn = conn;
 
-          await channelClient.registerActor(opts.channelId, frameSigner.actor);
-          const snapshot = await channelClient.getRoster(opts.channelId);
+          await withRelayClientErrors(() =>
+            channelClient.registerActor(opts.channelId, frameSigner.actor),
+          );
+          const snapshot = await withRelayClientErrors(() =>
+            channelClient.getRoster(opts.channelId),
+          );
           for (const m of snapshot.members) {
             if (m.actorPubkey !== undefined) {
               vellum.upsertRosterEntry(m.principalUri, m.actorPubkey, Date.now());
@@ -325,7 +332,10 @@ export function runVellumSession(opts: RunVellumSessionOptions): VellumSessionHa
                   Promise.resolve(fabric.isSessionAllocated?.(opts.channelId, sessionId)).then(
                     (v) => v === true,
                   )
-              : (sessionId: string) => channelClient.isSessionAllocated(opts.channelId, sessionId);
+              : (sessionId: string) =>
+                  withRelayClientErrors(() =>
+                    channelClient.isSessionAllocated(opts.channelId, sessionId),
+                  );
 
           const server = startVellumControlServer({
             state,

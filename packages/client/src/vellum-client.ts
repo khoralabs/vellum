@@ -22,6 +22,7 @@ import {
 } from "@khoralabs/relay/mls";
 import type { ChainSnapshot } from "./chain/vellum-chain";
 import { createVellumChannel, joinVellumChannel } from "./channel-ops";
+import { throwFromFailedControlResponse } from "./client-error";
 import {
   type ChainInitResponse,
   ChainInitResponseSchema,
@@ -31,22 +32,21 @@ import {
   channelSqlitePath,
   VELLUM_CONTROL_HTTP_PATH,
   type VellumChainRow,
-  type VellumErrorCode,
   type VellumOfferRow,
   type VellumPathConfig,
   type VellumPortRow,
   vellumControlChainByIdPath,
-  vellumErrorCodeForStatus,
-  zVellumErrorCode,
 } from "./contracts";
 import { readVellumControlFile, removeVellumControlFile } from "./control-file";
 import { requireVellumIdentity } from "./identity";
 import { isPidAlive } from "./list-local-vellum";
 import type { VellumPersistence } from "./persistence/core/types";
 import { createVellumPersistenceAtPath } from "./persistence/sqlite/vellum-persistence";
+import { rethrowRelayAsVellumClientError, withRelayClientErrors } from "./relay-client-errors";
 import { createVellumControlTransportFromEnv, type VellumControlTransport } from "./transport";
 
 export type VellumConnectResult = "spawned" | "already-running";
+export { VellumClientError } from "./client-error";
 
 export type VellumClientOptions = {
   /** Vellum channel-relay HTTP origin. */
@@ -171,34 +171,6 @@ function daemonSpawnCmd(): string[] {
   return ["bun", "run", entry];
 }
 
-export class VellumClientError extends Error {
-  readonly status: number;
-  readonly code?: VellumErrorCode;
-  readonly bodyText?: string;
-
-  constructor(message: string, status: number, bodyText?: string, code?: VellumErrorCode) {
-    super(message);
-    this.name = "VellumClientError";
-    this.status = status;
-    this.bodyText = bodyText;
-    if (code !== undefined) this.code = code;
-  }
-}
-
-function throwFromFailedControlResponse(status: number, statusText: string, j: unknown): never {
-  let message = statusText.length > 0 ? statusText : `Request failed with status ${status}`;
-  let code: VellumErrorCode | undefined;
-  let bodyText: string | undefined;
-  if (typeof j === "object" && j !== null) {
-    bodyText = JSON.stringify(j);
-    const rec = j as { error?: unknown; code?: unknown };
-    if (typeof rec.error === "string" && rec.error.length > 0) message = rec.error;
-    const parsed = zVellumErrorCode.safeParse(rec.code);
-    if (parsed.success) code = parsed.data;
-  }
-  throw new VellumClientError(message, status, bodyText, code ?? vellumErrorCodeForStatus(status));
-}
-
 /** @internal Exported for unit tests. */
 export function throwFromFailedControlResponseForTest(
   status: number,
@@ -300,7 +272,7 @@ export class VellumClient {
       upgradeNonce.length === 0
     ) {
       const cc = new RelayClient({ relayBaseUrl: this.opts.relayBaseUrl, signer });
-      const out = await cc.mintTicket(this.opts.channelId);
+      const out = await withRelayClientErrors(() => cc.mintTicket(this.opts.channelId));
       webSocketUrl = out.webSocketUrl;
       upgradeNonce = out.upgradeNonce;
       lastBlobId = out.lastBlobId;
@@ -377,22 +349,30 @@ export class VellumClient {
       relayBaseUrl: this.opts.relayBaseUrl,
       signer,
     });
-    await channelClient.allocateSession(this.opts.channelId, {
-      counterpartyDid: peerDid,
-      sessionId,
-    });
+    await withRelayClientErrors(() =>
+      channelClient.allocateSession(this.opts.channelId, {
+        counterpartyDid: peerDid,
+        sessionId,
+      }),
+    );
 
     try {
-      const fetched = await fetchKeyPackageHttp(this.opts.relayBaseUrl, signer, peerDid);
+      const fetched = await withRelayClientErrors(() =>
+        fetchKeyPackageHttp(this.opts.relayBaseUrl, signer, peerDid),
+      );
       const peerKeyPackageBytes = base64UrlToBytes(fetched.keyPackage);
       const mlsSession = new MlsGroupSession(sessionId, myDid, ed25519PrivKey);
       const { welcomeBase64Url } = await mlsSession.createWithPeer(peerKeyPackageBytes, peerDid);
-      await publishMlsWelcomeHttp(this.opts.relayBaseUrl, signer, this.opts.channelId, sessionId, {
-        welcome: welcomeBase64Url,
-        route: generateRouteHandle(),
-      });
+      await withRelayClientErrors(() =>
+        publishMlsWelcomeHttp(this.opts.relayBaseUrl, signer, this.opts.channelId, sessionId, {
+          welcome: welcomeBase64Url,
+          route: generateRouteHandle(),
+        }),
+      );
 
-      const roster = await channelClient.getRoster(this.opts.channelId);
+      const roster = await withRelayClientErrors(() =>
+        channelClient.getRoster(this.opts.channelId),
+      );
       const peerMember = roster.members.find((m) => m.principalUri === peerDid);
       const peerIdentityKey = peerMember?.actorPubkey?.trim();
       if (peerIdentityKey === undefined || !/^[0-9a-f]{64}$/.test(peerIdentityKey)) {
@@ -430,7 +410,7 @@ export class VellumClient {
       return ChainInitResponseSchema.parse(j);
     } catch (e) {
       await channelClient.releaseSession(this.opts.channelId, sessionId).catch(() => {});
-      throw e;
+      rethrowRelayAsVellumClientError(e);
     }
   }
 
@@ -441,7 +421,9 @@ export class VellumClient {
       relayBaseUrl: this.opts.relayBaseUrl,
       signer,
     });
-    await channelClient.releaseSession(this.opts.channelId, sessionId.trim());
+    await withRelayClientErrors(() =>
+      channelClient.releaseSession(this.opts.channelId, sessionId.trim()),
+    );
   }
 
   async sendTurn(sessionId: string, body: Record<string, unknown>): Promise<void> {

@@ -1,6 +1,7 @@
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import { RelayClient } from "@khoralabs/relay/client";
 import type { RelaySessionQuota } from "@khoralabs/relay/contracts";
+import { withRelayClientErrors } from "./relay-client-errors";
 
 export type { RelaySessionQuota };
 
@@ -29,11 +30,11 @@ export async function createVellumChannel(opts: CreateVellumChannelOptions) {
   if (opts.maxPopulation !== undefined) body.maxPopulation = opts.maxPopulation;
   if (opts.maxSessions !== undefined) body.maxSessions = opts.maxSessions;
   const cc = new RelayClient({ relayBaseUrl: opts.relayBaseUrl, signer: opts.signer });
-  return cc.createChannel(body);
+  return withRelayClientErrors(() => cc.createChannel(body));
 }
 
 /** Join a channel with an invite token. */
 export async function joinVellumChannel(opts: JoinVellumChannelOptions) {
   const cc = new RelayClient({ relayBaseUrl: opts.relayBaseUrl, signer: opts.signer });
-  return cc.joinChannel({ inviteToken: opts.inviteToken });
+  return withRelayClientErrors(() => cc.joinChannel({ inviteToken: opts.inviteToken }));
 }

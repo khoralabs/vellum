@@ -1,6 +1,7 @@
 import type { PersistableSigner } from "@khoralabs/did-key-identity";
 import { RelayClient } from "@khoralabs/relay/client";
 import { relayWsUpgradeProtocol } from "@khoralabs/relay/contracts";
+import { withRelayClientErrors } from "../../../relay-client-errors";
 import type {
   ChannelFabric,
   ChannelFabricEnsureAttachedResult,
@@ -24,7 +25,7 @@ export function createRelayChannelFabric(opts: CreateRelayChannelFabricOptions):
   return {
     async ensureAttached(args): Promise<ChannelFabricEnsureAttachedResult> {
       const cc = new RelayClient({ relayBaseUrl, signer: args.signer });
-      const ticket = await cc.mintTicket(args.channelId);
+      const ticket = await withRelayClientErrors(() => cc.mintTicket(args.channelId));
       return {
         webSocketUrl: ticket.webSocketUrl,
         webSocketNonce: ticket.upgradeNonce,
@@ -77,6 +78,7 @@ export function createRelayChannelFabricForSigner(
   return {
     ensureAttached: (args) => base.ensureAttached(args),
     openFrameChannel: (args) => base.openFrameChannel(args),
-    isSessionAllocated: (channelId, sessionId) => cc.isSessionAllocated(channelId, sessionId),
+    isSessionAllocated: (channelId, sessionId) =>
+      withRelayClientErrors(() => cc.isSessionAllocated(channelId, sessionId)),
   };
 }
