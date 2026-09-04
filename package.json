@@ -9,7 +9,7 @@
       "vendor/libs/packages/*/**"
     ],
     "catalog": {
-      "@khoralabs/did-key-identity": "^0.1.0",
+      "@khoralabs/did-key-identity": "^0.2.0",
       "@khoralabs/obp-core": "^0.2.1",
       "@khoralabs/obp-nbc": "^0.2.1",
       "@khoralabs/obp-wire": "^0.2.1",
