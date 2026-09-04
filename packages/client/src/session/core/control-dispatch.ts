@@ -13,7 +13,9 @@ import {
   type ChainInitResponse,
   type ChainStateResponse,
   EndOffersRequestSchema,
+  matchVellumControlChainSnapshotPath,
   TurnRequestSchema,
+  VELLUM_CONTROL_HTTP_PATH,
 } from "../../contracts";
 import type {
   CreateVellumControlDispatchOptions,
@@ -95,11 +97,11 @@ export function createVellumControlDispatch(
 
   return async (req) => {
     const url = new URL(req.url);
-    if (req.method === "GET" && url.pathname === "/health") {
+    if (req.method === "GET" && url.pathname === VELLUM_CONTROL_HTTP_PATH.health) {
       return new Response(null, { status: 204 });
     }
 
-    if (req.method === "GET" && url.pathname === "/events") {
+    if (req.method === "GET" && url.pathname === VELLUM_CONTROL_HTTP_PATH.events) {
       const encoder = new TextEncoder();
       let onEvent: (e: VellumControlEvent) => void = () => {};
       const stream = new ReadableStream<Uint8Array>({
@@ -121,7 +123,7 @@ export function createVellumControlDispatch(
       });
     }
 
-    if (req.method === "GET" && url.pathname === "/chain") {
+    if (req.method === "GET" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chain) {
       const rows = meta.listChains();
       const chains = rows.map((r) => ({
         session_id: r.session_id,
@@ -137,9 +139,9 @@ export function createVellumControlDispatch(
       return Response.json(payload);
     }
 
-    const chainSnap = url.pathname.match(/^\/chain\/([^/]+)$/);
-    if (req.method === "GET" && chainSnap !== null && chainSnap[1] !== undefined) {
-      const sessionId = decodeURIComponent(chainSnap[1]);
+    const chainSessionId = matchVellumControlChainSnapshotPath(url.pathname);
+    if (req.method === "GET" && chainSessionId !== undefined) {
+      const sessionId = chainSessionId;
       const row = meta.getChain(sessionId);
       if (row === undefined && !state.handles.has(sessionId)) {
         return Response.json({ error: `unknown session: ${sessionId}` }, { status: 404 });
@@ -158,7 +160,7 @@ export function createVellumControlDispatch(
       }
     }
 
-    if (req.method === "POST" && url.pathname === "/chain/end-offers") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chainEndOffers) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
@@ -191,7 +193,7 @@ export function createVellumControlDispatch(
       });
     }
 
-    if (req.method === "POST" && url.pathname === "/chain/close") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chainClose) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
@@ -224,7 +226,7 @@ export function createVellumControlDispatch(
       });
     }
 
-    if (req.method === "POST" && url.pathname === "/chain/init") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.chainInit) {
       return serialize(mux, async () => {
         let body: unknown;
         try {
@@ -298,7 +300,7 @@ export function createVellumControlDispatch(
       });
     }
 
-    if (req.method === "POST" && url.pathname === "/turn") {
+    if (req.method === "POST" && url.pathname === VELLUM_CONTROL_HTTP_PATH.turn) {
       return serialize(mux, async () => {
         let body: unknown;
         try {

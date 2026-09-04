@@ -29,10 +29,12 @@ import {
   ChainStateResponseSchema,
   cfgDataDir,
   channelSqlitePath,
+  VELLUM_CONTROL_HTTP_PATH,
   type VellumChainRow,
   type VellumOfferRow,
   type VellumPathConfig,
   type VellumPortRow,
+  vellumControlChainByIdPath,
 } from "./contracts";
 import { readVellumControlFile, removeVellumControlFile } from "./control-file";
 import { requireVellumIdentity } from "./identity";
@@ -383,7 +385,7 @@ export class VellumClient {
       if (input.genesisTurn !== undefined) {
         payload.genesis_turn = input.genesisTurn;
       }
-      const res = await this.control().fetch("/chain/init", {
+      const res = await this.control().fetch(VELLUM_CONTROL_HTTP_PATH.chainInit, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
@@ -410,7 +412,7 @@ export class VellumClient {
   }
 
   async sendTurn(sessionId: string, body: Record<string, unknown>): Promise<void> {
-    const res = await this.control().fetch("/turn", {
+    const res = await this.control().fetch(VELLUM_CONTROL_HTTP_PATH.turn, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sessionId, body }),
@@ -422,7 +424,7 @@ export class VellumClient {
   }
 
   async endOffers(sessionId: string): Promise<void> {
-    const res = await this.control().fetch("/chain/end-offers", {
+    const res = await this.control().fetch(VELLUM_CONTROL_HTTP_PATH.chainEndOffers, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sessionId }),
@@ -434,7 +436,7 @@ export class VellumClient {
   }
 
   async terminateChain(sessionId: string): Promise<void> {
-    const res = await this.control().fetch("/chain/close", {
+    const res = await this.control().fetch(VELLUM_CONTROL_HTTP_PATH.chainClose, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sessionId }),
@@ -446,7 +448,7 @@ export class VellumClient {
   }
 
   async getSessionSnapshot(sessionId: string): Promise<ChainSnapshot> {
-    const res = await this.control().fetch(`/chain/${encodeURIComponent(sessionId)}`);
+    const res = await this.control().fetch(vellumControlChainByIdPath(sessionId));
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
       throw new Error(httpFailMessage(res.statusText, j));
@@ -462,7 +464,7 @@ export class VellumClient {
   }
 
   async getChainSnapshot(): Promise<ChainStateResponse> {
-    const res = await this.control().fetch("/chain");
+    const res = await this.control().fetch(VELLUM_CONTROL_HTTP_PATH.chain);
     const j: unknown = await res.json().catch(() => null);
     if (!res.ok) {
       throw new Error(httpFailMessage(res.statusText, j));
