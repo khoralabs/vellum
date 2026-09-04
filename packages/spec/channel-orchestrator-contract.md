@@ -55,7 +55,7 @@ Each container receives **fixed env** (see relay README). Orchestrator generates
 
 Setting `VELLUM_CHANNEL_ID` enables **single-channel mode** automatically (`VELLUM_RELAY_MODE=single` is optional explicit override). `POST /v1/channels` returns **501**.
 
-Orchestrator should wait for `GET /health` → `200` before returning URL to Khora.
+Orchestrator should wait for `GET /health` → `200` with JSON `{ ok: true, version: 1 }` before returning URL to Khora.
 
 ---
 

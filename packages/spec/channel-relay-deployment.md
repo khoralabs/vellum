@@ -161,7 +161,7 @@ The **multiplex** is not a "channel hub" product object. OBP **hub** = stamping 
 | POST | `/v1/channels/:id/chains/allocate` | Bilateral chain slot |
 | GET | `/v1/channels/:id/chains/:sessionId` | Slot status (daemon gate) |
 | POST | `/v1/channels/:id/chains/:sessionId/release` | Release slot |
-| GET | `/health` | Liveness |
+| GET | `/health` | Liveness — JSON `{ ok: true, version: 1 }` |
 
 **Not in canonical profile:** `POST /v1/channels` (create), channel discovery.
 
