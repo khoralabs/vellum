@@ -13,7 +13,7 @@
       "@khoralabs/obp-core": "^0.2.1",
       "@khoralabs/obp-nbc": "^0.2.1",
       "@khoralabs/obp-wire": "^0.2.1",
-      "@khoralabs/relay": "^0.3.0",
+      "@khoralabs/relay": "^0.3.1",
       "@types/bun": "latest",
       "typescript": "^5",
       "zod": "^4"
