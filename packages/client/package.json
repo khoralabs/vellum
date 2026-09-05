@@ -1,6 +1,6 @@
 {
   "name": "@khoralabs/vellum-client",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Vellum API client: daemon control POST + Bun SQLite channel store.",
   "license": "MIT",
   "type": "module",
