@@ -123,11 +123,6 @@ function randomGenesisSha256(): string {
   return createHash("sha256").update(randomBytes(32)).digest("hex");
 }
 
-/** Dev checkout: Bun entry for the daemon package. */
-function daemonEntryPath(): string {
-  return fileURLToPath(new URL("../../../../apps/daemon/src/index.ts", import.meta.url));
-}
-
 function resolvePublishedDaemonBin(): string | undefined {
   try {
     const require = createRequire(import.meta.url);
@@ -151,24 +146,25 @@ function resolvePublishedDaemonBin(): string | undefined {
   return undefined;
 }
 
-/** Prefer `VELLUM_DAEMON_BIN`, then published meta bin, then monorepo Bun entry if it exists. */
+/** Native/bin paths spawn as-is; `.ts` entries run via Bun (workspace bin). */
+function spawnArgvForDaemonTarget(target: string): string[] {
+  return target.endsWith(".ts") ? ["bun", "run", target] : [target];
+}
+
+/** Prefer `VELLUM_DAEMON_BIN`, then `@khoralabs/vellum-daemon` package bin. */
 function daemonSpawnCmd(): string[] {
   const bin = process.env.VELLUM_DAEMON_BIN?.trim();
   if (bin !== undefined && bin.length > 0) {
     if (!fs.existsSync(bin)) {
       throw new Error(`VELLUM_DAEMON_BIN does not exist: ${bin}`);
     }
-    return [bin];
+    return spawnArgvForDaemonTarget(bin);
   }
   const published = resolvePublishedDaemonBin();
-  if (published !== undefined) return [published];
-  const entry = daemonEntryPath();
-  if (!fs.existsSync(entry)) {
-    throw new Error(
-      "vellum daemon binary not found: set VELLUM_DAEMON_BIN, install @khoralabs/vellum-daemon, or run from a vellum monorepo checkout",
-    );
-  }
-  return ["bun", "run", entry];
+  if (published !== undefined) return spawnArgvForDaemonTarget(published);
+  throw new Error(
+    "vellum daemon binary not found: set VELLUM_DAEMON_BIN or install @khoralabs/vellum-daemon",
+  );
 }
 
 /** @internal Exported for unit tests. */
