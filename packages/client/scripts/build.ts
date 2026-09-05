@@ -47,6 +47,7 @@ const entries: Entry[] = [
   },
   { src: "src/pool/index.ts", outRel: "pool/index.js", target: "bun" },
   { src: "src/pool/host.ts", outRel: "pool/host.js", target: "bun" },
+  { src: "src/paths.ts", outRel: "paths.js", target: "node" },
 ];
 
 rmSync(distDir, { recursive: true, force: true });

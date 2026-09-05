@@ -69,6 +69,11 @@
       "import": "./src/pool/host.ts",
       "default": "./src/pool/host.ts"
     },
+    "./paths": {
+      "types": "./src/paths.ts",
+      "import": "./src/paths.ts",
+      "default": "./src/paths.ts"
+    },
     "./vellum-config.schema.json": "./vellum-config.schema.json"
   },
   "scripts": {

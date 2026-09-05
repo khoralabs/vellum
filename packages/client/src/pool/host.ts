@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import type {
   ChainInitResponse,
   ChainSnapshot,
@@ -8,6 +6,8 @@ import type {
 } from "../index";
 import { createSharedUplinkChannelFabric } from "../session";
 import { VellumPool } from "./vellum-pool";
+
+export { vellumPoolAttachmentDataDir } from "./paths";
 
 /** Per-DID Vellum channel ops returned by {@link wrapVellumPoolClient}. */
 export type VellumHandle = {
@@ -68,17 +68,4 @@ export function wrapVellumPoolClient(
     getSessionSnapshot: (s) => client().getSessionSnapshot(s),
     listChains: () => client().listChainsFromStore(),
   };
-}
-
-/** Matches `VellumPool` attachment data dirs. */
-export function vellumPoolAttachmentDataDir(
-  dataDirRoot: string,
-  did: string,
-  channelId: string,
-): string {
-  return path.join(
-    path.resolve(dataDirRoot),
-    encodeURIComponent(did),
-    encodeURIComponent(channelId),
-  );
 }
