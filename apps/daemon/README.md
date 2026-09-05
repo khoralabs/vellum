@@ -1,15 +1,22 @@
-# @khoralabs/vellum-cli
+# `@khoralabs/vellum-daemon`
 
-To install dependencies:
+NBC channel daemon process entry. Session runtime lives in `@khoralabs/vellum-client`.
 
-```bash
-bun install
-```
-
-To run:
+## Local / monorepo
 
 ```bash
 bun run src/index.ts
+# or
+bun start
 ```
 
-This project was created using `bun init` in bun v1.3.4. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+When `@khoralabs/vellum-client` spawns the daemon, resolution is:
+
+1. `VELLUM_DAEMON_BIN` (absolute path to this entry or a compiled binary)
+2. This package’s `bin` (`vellum-daemon` → `./src/index.ts` in the workspace; published meta packages ship a native launcher)
+
+Set `VELLUM_DAEMON_BIN` in `.env` for explicit local control — see `.env.example`. Clients never embed a relative `apps/daemon` URL (bundler-safe).
+
+## Env
+
+See [`.env.example`](./.env.example) for channel, relay, and identity variables.
