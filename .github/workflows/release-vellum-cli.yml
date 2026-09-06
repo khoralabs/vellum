@@ -68,7 +68,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: test
-        run: bun test apps/cli apps/daemon packages/client scripts/stage-vellum-release.test.ts scripts/homebrew-vellum.test.ts
+        run: bun test apps/cli apps/daemon packages/client scripts/stage-vellum-release.test.ts scripts/homebrew-vellum.test.ts scripts/publish-skills.test.ts
 
       - name: build json schema
         run: bun run --cwd packages/client build:schema
@@ -157,3 +157,10 @@ jobs:
           git add homebrew-tap/Formula/vellum.rb
           git diff --staged --quiet || HUSKY=0 git commit -m "chore(homebrew): vellum-cli@${VERSION}"
           HUSKY=0 git push origin HEAD
+
+      # After the release commit so skill-source.json records that SHA when source exists.
+      - name: publish skills
+        if: ${{ inputs.dry_run == false }}
+        env:
+          SKILLS_REPO_TOKEN: ${{ secrets.SKILLS_REPO_TOKEN }}
+        run: bun run scripts/publish-skills.ts "$VERSION"
