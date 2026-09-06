@@ -157,10 +157,3 @@ jobs:
           git add homebrew-tap/Formula/vellum.rb
           git diff --staged --quiet || HUSKY=0 git commit -m "chore(homebrew): vellum-cli@${VERSION}"
           HUSKY=0 git push origin HEAD
-
-      # After the release commit so skill-source.json records that SHA when source exists.
-      - name: publish skills
-        if: ${{ inputs.dry_run == false }}
-        env:
-          SKILLS_REPO_TOKEN: ${{ secrets.SKILLS_REPO_TOKEN }}
-        run: bun run scripts/publish-skills.ts "$VERSION"

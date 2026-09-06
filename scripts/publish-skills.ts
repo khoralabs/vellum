@@ -4,15 +4,15 @@
  *
  * When `apps/cli/assets/skills/vellum-cli` is absent, exits cleanly so releases
  * keep working before the skill tree is authored. Otherwise mirrors the khora /
- * agent-review publisher: clone with SKILLS_REPO_TOKEN, replace wholesale, write
- * skill-source.json, push. No-ops when the token is unset.
+ * agent-review publisher: clone with SKILLS_REPO_TOKEN, replace `skills/vellum-cli/`
+ * wholesale, write skill-source.json, push. No-ops when the token is unset.
  */
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
 export const SKILLS_REPO = "khoralabs/skills";
-export const SKILL_DEST_NAME = "vellum-cli";
+export const SKILL_DEST_NAME = "skills/vellum-cli";
 export const SKILL_SOURCE_REL = "apps/cli/assets/skills/vellum-cli";
 export const PACKAGE_NAME = "@khoralabs/vellum-cli";
 export const SOURCE_REPO = "khoralabs/vellum";

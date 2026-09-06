@@ -1,0 +1,75 @@
+name: publish vellum-cli skills
+
+# Separate from release-vellum-cli so skills publish cannot block npm/Homebrew.
+# No-ops cleanly when apps/cli/assets/skills/vellum-cli is not authored yet.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver stamped into skill-source.json (match the released CLI)"
+        required: true
+        type: string
+      ref:
+        description: "Git ref to publish from (branch, tag, or SHA). Default: workflow ref."
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref != '' && inputs.ref || github.ref }}
+
+      - name: init submodules
+        env:
+          TOKEN: ${{ secrets.KHORALABS_SUBMODULES_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::error::KHORALABS_SUBMODULES_TOKEN secret is empty or unset"
+            exit 1
+          fi
+          sed -i 's|git@github.com:|https://github.com/|g' .gitmodules
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: install
+        run: bun install --frozen-lockfile
+
+      - name: test publish-skills
+        run: bun test scripts/publish-skills.test.ts
+
+      - name: verify skills-repo token
+        env:
+          GH_TOKEN: ${{ secrets.SKILLS_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::SKILLS_REPO_TOKEN is empty or unset"
+            exit 1
+          fi
+          push="$(gh api repos/khoralabs/skills --jq '.permissions.push // false')"
+          if [ "$push" != "true" ]; then
+            echo "::error::SKILLS_REPO_TOKEN lacks push permission on khoralabs/skills"
+            exit 1
+          fi
+          echo "SKILLS_REPO_TOKEN can push to khoralabs/skills"
+
+      - name: publish skills
+        env:
+          SKILLS_REPO_TOKEN: ${{ secrets.SKILLS_REPO_TOKEN }}
+        run: bun run scripts/publish-skills.ts "$VERSION"
