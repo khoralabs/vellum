@@ -25,7 +25,7 @@ Husky **pre-push** runs `format:check` and `typecheck`. CI (`.github/workflows/c
 
 Publish prebuilt CLI/daemon packages with the **release vellum-cli** workflow (`workflow_dispatch` on GitHub). Requires `NPM_TOKEN`. For Homebrew sync to [`khoralabs/homebrew-tap`](https://github.com/khoralabs/homebrew-tap), also set `HOMEBREW_TAP_TOKEN`.
 
-To publish CLI skills to [`khoralabs/skills`](https://github.com/khoralabs/skills) once `apps/cli/assets/skills/vellum-cli/` exists, set `SKILLS_REPO_TOKEN` (fine-grained PAT with **Contents: Write** on that repo only). Until the skill tree is authored, the publish step no-ops.
+To publish CLI skills to [`khoralabs/skills`](https://github.com/khoralabs/skills) once `apps/cli/assets/skills/vellum-cli/` exists, set `SKILLS_REPO_TOKEN` (fine-grained PAT with **Contents: Write** on that repo only) and run the separate **publish-vellum-cli-skills** workflow after release. Until the skill tree is authored, that workflow no-ops. Destination path: `skills/vellum-cli/`.
 
 ```bash
 brew tap khoralabs/tap
