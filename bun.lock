@@ -47,9 +47,23 @@
         "typescript": "catalog:",
       },
     },
+    "apps/negotiation-lab": {
+      "name": "@khoralabs/vellum-negotiation-lab",
+      "version": "0.0.0",
+      "dependencies": {
+        "@khoralabs/obp-core": "catalog:",
+        "@khoralabs/obp-nbc": "catalog:",
+        "ai": "^7.0.9",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/client": {
       "name": "@khoralabs/vellum-client",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "dependencies": {
         "@khoralabs/did-key-identity": "catalog:",
         "@khoralabs/obp-core": "catalog:",
@@ -194,6 +208,8 @@
     "@khoralabs/vellum-client": ["@khoralabs/vellum-client@workspace:packages/client"],
 
     "@khoralabs/vellum-daemon": ["@khoralabs/vellum-daemon@workspace:apps/daemon"],
+
+    "@khoralabs/vellum-negotiation-lab": ["@khoralabs/vellum-negotiation-lab@workspace:apps/negotiation-lab"],
 
     "@mixmark-io/domino": ["@mixmark-io/domino@2.2.0", "", {}, "sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw=="],
 

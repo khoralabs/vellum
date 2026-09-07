@@ -21,6 +21,15 @@ bun run typecheck       # tsc across @khoralabs/vellum-* packages
 
 Husky **pre-push** runs `format:check` and `typecheck`. CI (`.github/workflows/ci.yml`) runs the same plus first-party tests.
 
+## Negotiation lab
+
+Minimal convention-formation experiment (in-memory OBP/NBC + AI Gateway policy): [`apps/negotiation-lab/README.md`](apps/negotiation-lab/README.md).
+
+```bash
+bun test apps/negotiation-lab
+bun run apps/negotiation-lab/src/cli.ts --model openai/gpt-4.1-mini --repeats 2
+```
+
 ## Release
 
 Publish prebuilt CLI/daemon packages with the **release vellum-cli** workflow (`workflow_dispatch` on GitHub). Requires `NPM_TOKEN`. For Homebrew sync to [`khoralabs/homebrew-tap`](https://github.com/khoralabs/homebrew-tap), also set `HOMEBREW_TAP_TOKEN`.

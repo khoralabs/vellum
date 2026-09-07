@@ -1,0 +1,21 @@
+{
+  "name": "@khoralabs/vellum-negotiation-lab",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "experiment:conventions": "bun run ./src/cli.ts",
+    "test": "bun test ./src"
+  },
+  "dependencies": {
+    "@khoralabs/obp-core": "catalog:",
+    "@khoralabs/obp-nbc": "catalog:",
+    "ai": "^7.0.9",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}
