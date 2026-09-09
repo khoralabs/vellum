@@ -55,6 +55,12 @@ describe("openai-turn-adapter", () => {
     expect(zod.safeParse(12).success).toBe(false);
   });
 
+  test("jsonSchemaPropToZod accepts single-item non-string enums as literals", () => {
+    const zod = jsonSchemaPropToZod({ enum: [3.98] });
+    expect(zod.safeParse(3.98).success).toBe(true);
+    expect(zod.safeParse(4.12).success).toBe(false);
+  });
+
   test("continue step1 uses nested anyOf (never oneOf) with per-port payload enums", () => {
     const ports = [
       { id: "id-2", bind_policy: priceDeliveryPolicy },
