@@ -23,11 +23,17 @@ Husky **pre-push** runs `format:check` and `typecheck`. CI (`.github/workflows/c
 
 ## Negotiation lab
 
-Minimal convention-formation experiment (in-memory OBP/NBC + AI Gateway policy): [`apps/negotiation-lab/README.md`](apps/negotiation-lab/README.md).
+Itex–Cypress OBP bargaining benchmark (in-memory OBP/NBC + live AI Gateway): [`apps/negotiation-lab/README.md`](apps/negotiation-lab/README.md).
 
 ```bash
 bun test apps/negotiation-lab
-bun run apps/negotiation-lab/src/cli.ts --model openai/gpt-4.1-mini --repeats 2
+bun run apps/negotiation-lab/src/cli.ts \
+  --domain itex-cypress \
+  --model openai/gpt-4.1-mini \
+  --repeats 5 \
+  --max-turns 12 \
+  --arm-order memory-first \
+  --run-id itex-cypress-001
 ```
 
 ## Release
