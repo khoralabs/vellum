@@ -1,0 +1,153 @@
+{
+  "meta": {
+    "name": "Itex–Cypress",
+    "description": "ANAC 2010 bilateral bicycle-component bargaining domain (Itex Manufacturing vs Cypress Cycles).",
+    "source": {
+      "label": "NegMAS ANAC 2010 ItexvsCypress scenario (Genius-compatible XML)",
+      "url": "https://github.com/yasserfarouk/negmas/tree/main/tests/data/scenarios/anac/y2010/ItexvsCypress",
+      "files": ["ItexvsCypress_domain.xml", "ItexvsCypress_Itex.xml", "ItexvsCypress_Cypress.xml"],
+      "sha256": {
+        "ItexvsCypress_domain.xml": "2e20fd01924c456d66a735f516838bb7002364af3921685a583337a5a5bdbf33",
+        "ItexvsCypress_Itex.xml": "4781333e2b715a949d7ea27394acc68033c588625b33fd55987264ed8afb50f3",
+        "ItexvsCypress_Cypress.xml": "96add2bc0e05e3180270635c34952c94c42f7bdb8d8a454e18a78333a7d291ec"
+      },
+      "citation": "Baarslag et al., The First Automated Negotiating Agents Competition (ANAC 2010)."
+    },
+    "notes": [
+      "Profiles manufacturer (Itex) and buyer (Cypress) are normalized from the canonical Genius/NegMAS XMLs.",
+      "Profile buyer_transfer is a lab transfer peer: Cypress issue evaluations with reordered weights so A↔C is not identical to A↔B.",
+      "Utility uses Genius additive normalization: sum_i weight_i * (eval(value_i) / max_eval_i)."
+    ]
+  },
+  "issues": [
+    {
+      "id": "Price",
+      "values": ["$4.37", "$4.12", "$3.98", "$3.71", "$3.47"]
+    },
+    {
+      "id": "Delivery",
+      "values": ["60 days", "45 days", "30 days", "20 days"]
+    },
+    {
+      "id": "Payment",
+      "values": ["Upon delivery", "30 days after delivery", "60 days after delivery"]
+    },
+    {
+      "id": "Returns",
+      "values": ["Full price", "5% spoilage allowed", "10% spoilage allowed"]
+    }
+  ],
+  "profiles": {
+    "manufacturer": {
+      "role": "manufacturer",
+      "party": "Itex Manufacturing",
+      "goal": "As Itex Manufacturing, a bicycle-component producer, reach a mutually acceptable complete contract on Price, Delivery, Payment, and Returns that is at least as good as walking away.",
+      "reservation": 0,
+      "weights": {
+        "Price": 0.28812635027374,
+        "Delivery": 0.1915290482981283,
+        "Payment": 0.24212575877553694,
+        "Returns": 0.2782188426525948
+      },
+      "evaluations": {
+        "Price": {
+          "$4.37": 30,
+          "$4.12": 20,
+          "$3.98": 10,
+          "$3.71": 5,
+          "$3.47": 1
+        },
+        "Delivery": {
+          "60 days": 1,
+          "45 days": 20,
+          "30 days": 10,
+          "20 days": 5
+        },
+        "Payment": {
+          "Upon delivery": 10,
+          "30 days after delivery": 25,
+          "60 days after delivery": 1
+        },
+        "Returns": {
+          "Full price": 1,
+          "5% spoilage allowed": 30,
+          "10% spoilage allowed": 5
+        }
+      }
+    },
+    "buyer": {
+      "role": "buyer",
+      "party": "Cypress Cycles",
+      "goal": "As Cypress Cycles, a bicycle builder buying components, reach a mutually acceptable complete contract on Price, Delivery, Payment, and Returns that is at least as good as walking away.",
+      "reservation": 0,
+      "weights": {
+        "Price": 0.4700166576535899,
+        "Delivery": 0.1220816713696379,
+        "Payment": 0.17727008190772825,
+        "Returns": 0.2306315890690439
+      },
+      "evaluations": {
+        "Price": {
+          "$4.37": 1,
+          "$4.12": 10,
+          "$3.98": 25,
+          "$3.71": 33,
+          "$3.47": 40
+        },
+        "Delivery": {
+          "60 days": 1,
+          "45 days": 10,
+          "30 days": 19,
+          "20 days": 25
+        },
+        "Payment": {
+          "Upon delivery": 15,
+          "30 days after delivery": 6,
+          "60 days after delivery": 1
+        },
+        "Returns": {
+          "Full price": 20,
+          "5% spoilage allowed": 7,
+          "10% spoilage allowed": 1
+        }
+      }
+    },
+    "buyer_transfer": {
+      "role": "buyer_transfer",
+      "party": "Transfer buyer (lab profile)",
+      "goal": "As a bicycle builder buying components, reach a mutually acceptable complete contract on Price, Delivery, Payment, and Returns that is at least as good as walking away.",
+      "reservation": 0,
+      "weights": {
+        "Price": 0.18,
+        "Delivery": 0.34,
+        "Payment": 0.28,
+        "Returns": 0.2
+      },
+      "evaluations": {
+        "Price": {
+          "$4.37": 1,
+          "$4.12": 10,
+          "$3.98": 25,
+          "$3.71": 33,
+          "$3.47": 40
+        },
+        "Delivery": {
+          "60 days": 1,
+          "45 days": 10,
+          "30 days": 19,
+          "20 days": 25
+        },
+        "Payment": {
+          "Upon delivery": 15,
+          "30 days after delivery": 6,
+          "60 days after delivery": 1
+        },
+        "Returns": {
+          "Full price": 20,
+          "5% spoilage allowed": 7,
+          "10% spoilage allowed": 1
+        }
+      }
+    }
+  }
+}
